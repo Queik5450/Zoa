@@ -1,14 +1,31 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronLeft, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
+import { updateDatasetStatus } from '../api';
 
 export default function Dataset() {
   const navigate = useNavigate();
-  const { observations } = useApp();
-  const [statuses, setStatuses] = useState({});
+  const { observations, setObservations } = useApp();
 
-  const setStatus = (id, status) => setStatuses(s => ({ ...s, [id]: status }));
+  const setStatus = async (id, status) => {
+    try {
+      await updateDatasetStatus(id, status);
+      // Update local state to reflect the status change
+      setObservations(prev => prev.map(obs => obs.id === id ? { ...obs, dataset_status: status } : obs));
+    } catch(e) {
+      console.error(e);
+    }
+  };
+
+  const removeStatus = async (id) => {
+    try {
+      await updateDatasetStatus(id, "pending");
+      setObservations(prev => prev.map(obs => obs.id === id ? { ...obs, dataset_status: "pending" } : obs));
+    } catch(e) {
+      console.error(e);
+    }
+  };
 
   const statusColor = (s) => {
     if (s === 'approved') return 'text-guayana-600 bg-guayana-50';
@@ -18,9 +35,9 @@ export default function Dataset() {
 
   const counts = {
     total: observations.length,
-    approved: Object.values(statuses).filter(s => s === 'approved').length,
-    rejected: Object.values(statuses).filter(s => s === 'rejected').length,
-    pending: observations.length - Object.keys(statuses).length,
+    approved: observations.filter(o => o.dataset_status === 'approved').length,
+    rejected: observations.filter(o => o.dataset_status === 'rejected').length,
+    pending: observations.filter(o => !o.dataset_status || o.dataset_status === 'pending').length,
   };
 
   return (
@@ -53,7 +70,7 @@ export default function Dataset() {
 
         <div className="space-y-3">
           {observations.map(obs => {
-            const status = statuses[obs.id];
+            const status = obs.dataset_status && obs.dataset_status !== "pending" ? obs.dataset_status : null;
             return (
               <div key={obs.id} className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
                 <div className="flex gap-3 p-3">
@@ -89,7 +106,7 @@ export default function Dataset() {
                 {status && (
                   <div className="border-t border-gray-100">
                     <button
-                      onClick={() => setStatuses(s => { const n = { ...s }; delete n[obs.id]; return n; })}
+                      onClick={() => removeStatus(obs.id)}
                       className="w-full py-2 text-xs text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-colors"
                     >
                       Cambiar decisión

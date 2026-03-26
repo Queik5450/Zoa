@@ -1,12 +1,7 @@
 import { useState, useRef } from 'react';
 import { ChevronLeft, Camera, Loader2, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-
-const mockSuggestions = [
-  { species: 'Ara macao', commonName: 'Guacamayo Escarlata', confidence: 92, image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Beautiful_red_macaw.jpg/640px-Beautiful_red_macaw.jpg' },
-  { species: 'Ara chloropterus', commonName: 'Guacamayo Verde', confidence: 65, image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/Ara_chloroptera_-Jurong_Bird_Park%2C_Singapore-8a.jpg/640px-Ara_chloroptera_-Jurong_Bird_Park%2C_Singapore-8a.jpg' },
-  { species: 'Amazona amazonica', commonName: 'Loro Guaro', confidence: 43, image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Orange-winged_Amazon_Amazona_amazonica_2.jpg/640px-Orange-winged_Amazon_Amazona_amazonica_2.jpg' },
-];
+import { identifySpeciesApi } from '../api';
 
 export default function Identify() {
   const navigate = useNavigate();
@@ -23,13 +18,17 @@ export default function Identify() {
     }
   };
 
-  const identify = () => {
+  const identify = async () => {
     if (!image) return;
     setLoading(true);
-    setTimeout(() => {
+    try {
+      const result = await identifySpeciesApi(image);
+      setResults(result.suggestions);
+    } catch(e) {
+      console.error(e);
+    } finally {
       setLoading(false);
-      setResults(mockSuggestions);
-    }, 2200);
+    }
   };
 
   return (
