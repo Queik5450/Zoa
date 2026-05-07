@@ -54,7 +54,7 @@ function App() {
       formData.append('file', file);
 
       // Llamar a nuestro backend Gemini (FastAPI)
-      const response = await fetch('https://zoa-5p6r.onrender.com', {
+      const response = await fetch('https://zoa-5p6r.onrender.com/api/scan', {
         method: 'POST',
         body: formData,
       });
