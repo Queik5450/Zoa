@@ -4,7 +4,6 @@ from app.api import endpoints
 
 app = FastAPI(title="Zoa API - GuayanaDex Backend", version="1.0.0")
 
-# Permiso para conectar tu frontend (React) con el backend (FastAPI) de Python
 origins = [
     "http://localhost:5173", # Vite puerto por defecto
     "http://127.0.0.1:5173"
@@ -18,7 +17,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Incluir las rutas /api de nuestro archivo /app/api/endpoints.py
 app.include_router(endpoints.router, prefix="/api")
 
 @app.get("/")
