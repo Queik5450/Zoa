@@ -1,13 +1,17 @@
 import React, { useRef } from 'react';
-import { Home as HomeIcon, Loader2, User } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import camaraSvg from './incons/camara.svg?raw';
+import homeSvg from './incons/home.svg?raw';
+import perfilSvg from './incons/perfil.svg?raw';
+import mapaSvg from './incons/mapa.svg?raw';
+import miZoologicoSvg from './incons/Book.svg?raw';
 
 const tintSvg = (svg, color) =>
-  svg.replace(/fill="(?:#7B7B7B|#7b7b7b|white|#FFFFFF)"/g, `fill="${color}"`);
+  svg.replace(/fill="(?:#7B7B7B|#7b7b7b|white|#FFFFFF|none)"/g, `fill="${color}"`);
 
 function BottomNav({ isScanning, onFileChange }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const fileInputRef = useRef(null);
 
   const handleCameraClick = () => {
@@ -19,26 +23,52 @@ function BottomNav({ isScanning, onFileChange }) {
   return (
     <div className="relative mt-auto h-[90px] w-full">
       <div className="absolute bottom-0 w-full h-[90px]">
-        <svg viewBox="0 0 400 90" className="w-full h-full" preserveAspectRatio="none">
+        <svg viewBox="0 0 400 90" className="w-full h-full" preserveAspectRatio="none" style={{ filter: 'drop-shadow(0px -2px 4px rgba(0,0,0,0.1))' }}>
           <path
             d="M 0 35 L 140 35 C 160 35 170 80 200 80 C 230 80 240 35 260 35 L 400 35 L 400 90 L 0 90 Z"
-            fill="#cbea30"
+            fill="#ffffff"
+            stroke="#9bb51e"
+            strokeWidth="3"
           />
         </svg>
       </div>
 
-      <div className="absolute bottom-0 w-full h-[55px] flex justify-between px-16 items-center">
-        <HomeIcon
-          size={40}
-          className="text-black fill-black cursor-pointer"
-          onClick={() => navigate('/')}
-        />
-        <User
-          size={40}
-          strokeWidth={3}
-          className="text-black cursor-pointer"
-          onClick={() => navigate('/profile')}
-        />
+      <div className="absolute bottom-0 w-full h-[120px] flex justify-between px-6 items-center">
+        {/* Left icons */}
+        <div className="flex gap-8 items-center pt-2">
+          <div className="flex flex-col items-center justify-center cursor-pointer" onClick={() => navigate('/')}>
+            <span
+              className="h-8 w-8 flex items-center justify-center"
+              dangerouslySetInnerHTML={{ __html: tintSvg(homeSvg, location.pathname === '/' ? '#9bb51e' : '#7B7B7B') }}
+            />
+            <span className={`text-[10px] mt-1 ${location.pathname === '/' ? 'text-[#9bb51e] font-semibold' : 'text-[#7B7B7B]'}`}>Inicio</span>
+          </div>
+          <div className="flex flex-col items-center justify-center cursor-pointer" onClick={() => navigate('/profile')}>
+            <span
+              className="h-8 w-8 flex items-center justify-center"
+              dangerouslySetInnerHTML={{ __html: tintSvg(perfilSvg, location.pathname === '/profile' ? '#9bb51e' : '#7B7B7B') }}
+            />
+            <span className={`text-[10px] mt-1 ${location.pathname === '/profile' ? 'text-[#9bb51e] font-semibold' : 'text-[#7B7B7B]'}`}>Perfil</span>
+          </div>
+        </div>
+
+        {/* Right icons */}
+        <div className="flex gap-8 items-center pt-2">
+          <div className="flex flex-col items-center justify-center cursor-pointer" onClick={() => navigate('/map')}>
+            <span
+              className="h-8 w-8 flex items-center justify-center"
+              dangerouslySetInnerHTML={{ __html: tintSvg(mapaSvg, location.pathname === '/map' ? '#9bb51e' : '#7B7B7B') }}
+            />
+            <span className={`text-[10px] mt-1 ${location.pathname === '/map' ? 'text-[#9bb51e] font-semibold' : 'text-[#7B7B7B]'}`}>Mapa</span>
+          </div>
+          <div className="flex flex-col items-center justify-center cursor-pointer" onClick={() => navigate('/zoo')}>
+            <span
+              className="h-8 w-8 flex items-center justify-center"
+              dangerouslySetInnerHTML={{ __html: tintSvg(miZoologicoSvg, location.pathname === '/zoo' ? '#9bb51e' : '#7B7B7B') }}
+            />
+            <span className={`text-[10px] mt-1 ${location.pathname === '/zoo' ? 'text-[#9bb51e] font-semibold' : 'text-[#7B7B7B]'}`}>Mi Zoológico</span>
+          </div>
+        </div>
       </div>
 
       <div className="absolute bottom-[20%] left-1/2 -translate-x-1/2">
