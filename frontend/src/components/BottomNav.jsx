@@ -35,7 +35,7 @@ function BottomNav({ isScanning, onFileChange }) {
         </svg>
       </div>
 
-      <div className="absolute bottom-4 w-full h-[120px] flex justify-between px-10 items-center">
+      <div className="absolute bottom-4 w-full h-[150px] flex justify-between px-10 items-center">
         {/* Left icons */}
         <div className="flex w-[32%] justify-between px-2 items-center">
           <div className="flex flex-col items-center justify-center cursor-pointer" onClick={() => navigate('/')}>
@@ -82,7 +82,7 @@ function BottomNav({ isScanning, onFileChange }) {
           type="button"
           onClick={handleCameraClick}
           disabled={isScanning}
-          className="flex h-[82px] w-[82px] items-center justify-center rounded-full border-[8px] border-[#f9f9f9] bg-[#9bb51e] shadow-[0_10px_20px_rgba(0,0,0,0.18)] outline-none transition-transform hover:scale-105 active:scale-95 z-20 disabled:cursor-not-allowed"
+          className="flex h-[82px] w-[82px] items-center justify-center rounded-full border-[8px] border-[#9bb51e] bg-[#9bb51e] shadow-[0_10px_20px_rgba(0,0,0,0.18)] outline-none transition-transform hover:scale-105 active:scale-95 z-20 disabled:cursor-not-allowed"
           aria-label="Abrir cámara"
         >
           {isScanning ? (
