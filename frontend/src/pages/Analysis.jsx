@@ -89,6 +89,7 @@ function AnalysisPage() {
       id: `scan-${analysisData.id || Date.now()}`,
       name: analysisData.common_name || 'Desconocido',
       species: analysisData.common_name || 'Especie',
+      scientificName: analysisData.scientific_name || '',
       authorName: `@${displayName}`,
       avatarLabel: displayName.slice(0, 2).toUpperCase(),
       description: analysisData.description || 'Sin descripción disponible.',
@@ -118,11 +119,11 @@ function AnalysisPage() {
   };
 
   return (
-    <div className="flex min-h-[100dvh] items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(19,60,46,0.18),_transparent_42%),linear-gradient(180deg,_#f6f7f1_0%,_#eef2e8_100%)] px-4 py-6">
+    <div className="flex min-h-[100dvh] items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(193,225,79,0.2),_transparent_42%),linear-gradient(180deg,_#f6f7f1_0%,_#eef2e8_100%)] px-4 py-6">
       <div className="w-full max-w-md rounded-[32px] border border-black/5 bg-white/95 p-5 shadow-[0_24px_70px_rgba(0,0,0,0.12)] backdrop-blur">
         <div className="mb-5 flex items-center justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#9bb51e]">Análisis IA</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#80902e]">Análisis IA</p>
             <h1 className="mt-1 text-2xl font-black tracking-tight text-black">Revisando la imagen</h1>
           </div>
           <button
@@ -144,7 +145,7 @@ function AnalysisPage() {
 
         {analysisState === 'loading' ? (
           <div className="rounded-[24px] border border-black/5 bg-[#f8faf4] p-5 text-center">
-            <Loader2 className="mx-auto mb-3 animate-spin text-[#9bb51e]" size={36} />
+            <Loader2 className="mx-auto mb-3 animate-spin text-[#c1e14f]" size={36} />
             <h2 className="text-lg font-bold text-black">Analizando especie...</h2>
             <p className="mt-2 text-sm leading-6 text-neutral-600">
               Estamos recolectando la información de la foto para prepararla antes de publicar.
@@ -169,7 +170,7 @@ function AnalysisPage() {
         {analysisState === 'ready' && analysisData ? (
           <div className="space-y-4 rounded-[24px] border border-black/5 bg-[#f8faf4] p-5">
             <div className="flex items-start gap-3">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#9bb51e] text-white">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#c1e14f] text-white">
                 <CheckCircle2 size={22} />
               </div>
               <div>
@@ -181,7 +182,7 @@ function AnalysisPage() {
             </div>
 
             <div className="rounded-[22px] bg-white p-4 shadow-[0_12px_30px_rgba(0,0,0,0.06)]">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#9bb51e]">Resultado</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#80902e]">Resultado</p>
               <h3 className="mt-2 text-xl font-black text-black">{analysisData.common_name || 'Desconocido'}</h3>
               <p className="mt-1 text-sm font-medium text-neutral-500">{analysisData.scientific_name || 'Sin nombre científico'}</p>
               <p className="mt-3 text-sm leading-6 text-neutral-700">{analysisData.description}</p>
@@ -198,7 +199,7 @@ function AnalysisPage() {
               <button
                 type="button"
                 onClick={handlePublish}
-                className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-[#133c2e] px-4 text-sm font-semibold text-white shadow-[0_12px_24px_rgba(19,60,46,0.24)]"
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-[#80902e] px-4 text-sm font-semibold text-white shadow-[0_12px_24px_rgba(128,144,46,0.28)]"
               >
                 <Upload size={16} />
                 Subir al home
