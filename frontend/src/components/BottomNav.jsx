@@ -6,6 +6,8 @@ import perfilSvg from './incons/perfil.svg?raw';
 import mapaSvg from './incons/mapa.svg?raw';
 import miZoologicoSvg from './incons/Book.svg?raw';
 
+// Función para cambiar el color de los íconos SVG
+
 const tintSvg = (svg, color) =>
   svg.replace(/fill="(?:#7B7B7B|#7b7b7b|white|#FFFFFF|none)"/g, `fill="${color}"`);
 
