@@ -18,7 +18,7 @@ function AnimalCard({ activeCard, cards, activeIndex, isFlipped, isScanning, onC
   return (
     <main className="flex-1 flex flex-col items-center justify-center px-4 py-3 relative z-0 mb-4">
       <div
-        className="relative w-full max-w-[350px] aspect-[292/522] cursor-pointer mx-auto"
+        className="relative w-full max-w-[300px] aspect-[292/522] cursor-pointer mx-auto"
         onClick={onCardClick}
         style={{ perspective: '1000px' }}
       >
