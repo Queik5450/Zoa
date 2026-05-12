@@ -21,8 +21,8 @@ function BottomNav({ isScanning, onFileChange }) {
   };
 
   return (
-    <div className="relative mt-auto h-[100px] w-full">
-      <div className="absolute bottom-0 w-full h-[93px]">
+    <div className="relative mt-auto h-[115px] w-full">
+      <div className="absolute bottom-0 w-full h-[105px]">
         <svg viewBox="0 0 400 90" className="w-full h-full" preserveAspectRatio="none" style={{ filter: 'drop-shadow(0px -2px 4px rgba(0,0,0,0.1))' }}>
           <path
             d="M 0 35 L 140 35 C 160 35 170 80 200 80 C 230 80 240 35 260 35 L 400 35 L 400 90 L 0 90 Z"
@@ -33,45 +33,41 @@ function BottomNav({ isScanning, onFileChange }) {
         </svg>
       </div>
 
-      <div className="absolute bottom-0 w-full h-[120px] flex justify-between px-10 items-center">
+      <div className="absolute bottom-4 w-full h-[120px] flex justify-between px-10 items-center">
         {/* Left icons */}
-        <div className="flex w-[32%] justify-between px-2 items-center pt-2">
+        <div className="flex w-[32%] justify-between px-2 items-center">
           <div className="flex flex-col items-center justify-center cursor-pointer" onClick={() => navigate('/')}>
             <span
-              className="h-10 w-10 flex items-center justify-center"
+              className="h-12 w-12 flex items-center justify-center"
               dangerouslySetInnerHTML={{ __html: tintSvg(homeSvg, location.pathname === '/' ? '#9bb51e' : '#7B7B7B') }}
             />
-            <span className={`text-xs mt-1 ${location.pathname === '/' ? 'text-[#9bb51e] font-semibold' : 'text-[#7B7B7B]'}`}>Inicio</span>
           </div>
           <div className="flex flex-col items-center justify-center cursor-pointer" onClick={() => navigate('/profile')}>
             <span
-              className="h-10 w-10 flex items-center justify-center"
+              className="h-12 w-12 flex items-center justify-center"
               dangerouslySetInnerHTML={{ __html: tintSvg(perfilSvg, location.pathname === '/profile' ? '#9bb51e' : '#7B7B7B') }}
             />
-            <span className={`text-xs mt-1 ${location.pathname === '/profile' ? 'text-[#9bb51e] font-semibold' : 'text-[#7B7B7B]'}`}>Perfil</span>
           </div>
         </div>
 
         {/* Right icons */}
-        <div className="flex w-[32%] justify-between px-2 items-center pt-2">
+        <div className="flex w-[32%] justify-between px-2 items-center">
           <div className="flex flex-col items-center justify-center cursor-pointer" onClick={() => navigate('/map')}>
             <span
-              className="h-10 w-10 flex items-center justify-center"
+              className="h-12 w-12 flex items-center justify-center"
               dangerouslySetInnerHTML={{ __html: tintSvg(mapaSvg, location.pathname === '/map' ? '#9bb51e' : '#7B7B7B') }}
             />
-            <span className={`text-xs mt-1 ${location.pathname === '/map' ? 'text-[#9bb51e] font-semibold' : 'text-[#7B7B7B]'}`}>Mapa</span>
           </div>
           <div className="flex flex-col items-center justify-center cursor-pointer" onClick={() => navigate('/zoo')}>
             <span
-              className="h-10 w-10 flex items-center justify-center"
+              className="h-12 w-12 flex items-center justify-center"
               dangerouslySetInnerHTML={{ __html: tintSvg(miZoologicoSvg, location.pathname === '/zoo' ? '#9bb51e' : '#7B7B7B') }}
             />
-            <span className={`text-xs mt-1 ${location.pathname === '/zoo' ? 'text-[#9bb51e] font-semibold' : 'text-[#7B7B7B]'}`}>Mi Zoológico</span>
           </div>
         </div>
       </div>
 
-      <div className="absolute bottom-[30%] left-1/2 -translate-x-1/2">
+      <div className="absolute bottom-[35%] left-1/2 -translate-x-1/2">
         <input
           ref={fileInputRef}
           type="file"

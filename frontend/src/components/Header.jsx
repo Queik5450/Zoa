@@ -1,15 +1,19 @@
 import React from 'react';
-import { Menu as MenuIcon, Search } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 
 function Header() {
-  const navigate = useNavigate();
-
   return (
-    <header className="relative z-10 bg-[#cbea30] pb-4 pt-6 px-6 flex justify-between items-center shadow-sm h-20">
-      <MenuIcon size={32} strokeWidth={3} className="text-black cursor-pointer" onClick={() => navigate('/menu')} />
-      <h1 className="text-3xl font-extrabold tracking-widest text-black">ZOA</h1>
-      <Search size={32} strokeWidth={3} className="text-black cursor-pointer" />
+    <header className="relative w-full h-[90px] z-10">
+      <div className="absolute top-0 w-full h-[90px]">
+        <svg viewBox="0 0 400 90" className="w-full h-full" preserveAspectRatio="none" style={{ filter: 'drop-shadow(0px 3px 4px rgba(0,0,0,0.15))' }}>
+          <path
+            d="M 0 0 L 400 0 L 400 90 Q 200 70 0 90 Z"
+            fill="#cbea30"
+          />
+        </svg>
+      </div>
+      <div className="absolute top-0 w-full h-[75px] flex justify-center items-center">
+        <h1 className="text-3xl font-extrabold tracking-widest text-black mt-2">ZOA</h1>
+      </div>
     </header>
   );
 }
