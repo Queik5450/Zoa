@@ -9,35 +9,64 @@ import {
   saveLocalGalleryItem,
   savePublishedCard,
 } from '../utils/scanFlow';
+import { apiUrl } from '../utils/api';
+import { supabase } from '../utils/supabaseClient';
 
 const SCAN_ENDPOINT = 'https://zoa-5p6r.onrender.com/api/scan';
 
 function AnalysisPage() {
   const navigate = useNavigate();
-  const [pendingScan, setPendingScan] = useState(null);
+  const [pendingScan] = useState(() => getPendingScan());
   const [analysisState, setAnalysisState] = useState('loading');
   const [analysisError, setAnalysisError] = useState('');
   const [analysisData, setAnalysisData] = useState(null);
+  const [locationData, setLocationData] = useState({
+    label: 'Ubicación no disponible',
+    latitude: null,
+    longitude: null,
+  });
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [publishError, setPublishError] = useState('');
 
   useEffect(() => {
     const authSession = getMockAuth();
-    const storedScan = getPendingScan();
 
     if (!authSession) {
       navigate('/auth', { replace: true });
       return;
     }
 
-    if (!storedScan) {
+    if (!pendingScan) {
       navigate('/', { replace: true });
       return;
     }
-
-    setPendingScan(storedScan);
-  }, [navigate]);
+  }, [navigate, pendingScan]);
 
   useEffect(() => {
     if (!pendingScan) return;
+
+    if (typeof navigator !== 'undefined' && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setLocationData({
+            label: 'Ubicación actual',
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          });
+        },
+        () => {
+          setLocationData({
+            label: 'Ubicación no disponible',
+            latitude: null,
+            longitude: null,
+          });
+        },
+        {
+          enableHighAccuracy: false,
+          timeout: 8000,
+        },
+      );
+    }
 
     let isActive = true;
 
@@ -80,28 +109,69 @@ function AnalysisPage() {
     };
   }, [pendingScan]);
 
-  const handlePublish = () => {
+  const handlePublish = async () => {
     if (!pendingScan || !analysisData) return;
+
+    setIsPublishing(true);
+    setPublishError('');
 
     const authSession = getMockAuth();
     const displayName = authSession?.displayName || 'usuario';
-    const newCard = {
-      id: `scan-${analysisData.id || Date.now()}`,
-      name: analysisData.common_name || 'Desconocido',
-      species: analysisData.common_name || 'Especie',
-      scientificName: analysisData.scientific_name || '',
-      authorName: `@${displayName}`,
-      avatarLabel: displayName.slice(0, 2).toUpperCase(),
-      description: analysisData.description || 'Sin descripción disponible.',
-      location: analysisData.scientific_name || 'Análisis completado',
-      likes: '1k',
-      comments: '100',
-      image: pendingScan.dataUrl,
-    };
 
-    savePublishedCard(newCard);
-    clearPendingScan();
-    navigate('/', { replace: true });
+    try {
+      const imageFile = dataUrlToFile(pendingScan.dataUrl, pendingScan.name || 'scan.jpg');
+      const formData = new FormData();
+      formData.append('file', imageFile);
+      formData.append('user_id', authSession?.userId || authSession?.id || authSession?.email || 'anonymous');
+      formData.append('user_email', authSession?.email || '');
+      formData.append('display_name', displayName);
+      formData.append('common_name', analysisData.common_name || 'Desconocido');
+      formData.append('scientific_name', analysisData.scientific_name || '');
+      formData.append('description', analysisData.description || 'Sin descripción disponible.');
+      formData.append('confidence_score', String(analysisData.confidence_score ?? 0));
+      formData.append('category', analysisData.category || 'unknown');
+      formData.append('media_type', 'photo');
+      formData.append('location_label', locationData.label || 'Ubicación actual');
+      formData.append('latitude', locationData.latitude ?? '');
+      formData.append('longitude', locationData.longitude ?? '');
+      formData.append('is_public', 'true');
+
+      const sessionResult = await supabase.auth.getSession();
+      const accessToken = sessionResult.data?.session?.access_token;
+
+      const response = await fetch(apiUrl('/publications'), {
+        method: 'POST',
+        headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('No se pudo publicar la observación.');
+      }
+
+      await response.json();
+      clearPendingScan();
+      navigate('/', { replace: true });
+    } catch (error) {
+      setPublishError(error?.message || 'No se pudo publicar.');
+      savePublishedCard({
+        id: `scan-${analysisData.id || Date.now()}`,
+        name: analysisData.common_name || 'Desconocido',
+        species: analysisData.common_name || 'Especie',
+        scientificName: analysisData.scientific_name || '',
+        authorName: `@${displayName}`,
+        avatarLabel: displayName.slice(0, 2).toUpperCase(),
+        description: analysisData.description || 'Sin descripción disponible.',
+        location: locationData.label || analysisData.scientific_name || 'Análisis completado',
+        likes: '1k',
+        comments: '100',
+        image: pendingScan.dataUrl,
+      });
+      clearPendingScan();
+      navigate('/', { replace: true });
+    } finally {
+      setIsPublishing(false);
+    }
   };
 
   const handleKeepPrivate = () => {
@@ -199,12 +269,15 @@ function AnalysisPage() {
               <button
                 type="button"
                 onClick={handlePublish}
+                disabled={isPublishing}
                 className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-[#80902e] px-4 text-sm font-semibold text-white shadow-[0_12px_24px_rgba(128,144,46,0.28)]"
               >
                 <Upload size={16} />
-                Subir al home
+                {isPublishing ? 'Publicando...' : 'Subir al home'}
               </button>
             </div>
+
+            {publishError ? <p className="text-sm font-medium text-red-600">{publishError}</p> : null}
           </div>
         ) : null}
       </div>

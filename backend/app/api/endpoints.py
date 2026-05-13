@@ -1,10 +1,24 @@
-from fastapi import APIRouter, File, UploadFile, Depends
+from __future__ import annotations
+
+import os
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional
+from uuid import uuid4
+
+from fastapi import APIRouter, File, Form, UploadFile
 from pydantic import BaseModel
-from sqlalchemy.orm import Session
-from app.core.db import supabase
+
 from app.ai_services.vision import analyze_image_with_ai
+from app.core.db import supabase
 
 router = APIRouter()
+
+MEDIA_BUCKET = "zoa_media"
+PUBLICATION_TABLE = "publications"
+SPECIES_TABLE = "species"
+LOCATION_TABLE = "locations"
+PROFILE_TABLE = "profiles"
+
 
 class ScanResult(BaseModel):
     id: str
@@ -13,65 +27,294 @@ class ScanResult(BaseModel):
     confidence_score: float
     description: str
     category: str
+    public_url: Optional[str] = None
+
+
+class ProfileSyncRequest(BaseModel):
+    user_id: str
+    email: Optional[str] = None
+    display_name: Optional[str] = None
+    avatar_url: Optional[str] = None
+
+
+def _now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def _safe_query(query):
+    try:
+        return query.execute()
+    except Exception as exc:
+        print(f"Supabase query failed: {exc}")
+        return None
+
+
+def _shape_publication(row: Dict[str, Any]) -> Dict[str, Any]:
+    display_name = row.get("display_name") or row.get("user_email") or "usuario"
+    avatar_label = (display_name[:2] or "ZO").upper()
+
+    return {
+        "id": row.get("id"),
+        "name": row.get("common_name") or row.get("species_name") or "Desconocido",
+        "species": row.get("common_name") or row.get("species_name") or "Especie",
+        "scientificName": row.get("scientific_name") or "",
+        "authorName": f"@{display_name}",
+        "avatarLabel": avatar_label,
+        "description": row.get("description") or "Sin descripción disponible.",
+        "location": row.get("location_label") or "Ubicación no disponible",
+        "likes": row.get("likes_count") or 0,
+        "comments": row.get("comments_count") or 0,
+        "image": row.get("media_url") or row.get("public_url") or "",
+        "mediaType": row.get("media_type") or "photo",
+        "userId": row.get("user_id"),
+        "speciesId": row.get("species_id"),
+        "locationId": row.get("location_id"),
+        "latitude": row.get("latitude"),
+        "longitude": row.get("longitude"),
+        "category": row.get("category"),
+        "publishedAt": row.get("created_at"),
+    }
+
+
+def _get_or_create_species_id(ai_result: Dict[str, Any]) -> Optional[str]:
+    scientific_name = (ai_result.get("scientific_name") or "").strip()
+    common_name = (ai_result.get("common_name") or "").strip()
+    category = (ai_result.get("category") or "unknown").strip()
+    description = (ai_result.get("description") or "").strip()
+
+    lookup_name = scientific_name or common_name or "Especie no identificada"
+    existing = _safe_query(
+        supabase.table(SPECIES_TABLE)
+        .select("id")
+        .eq("scientific_name", lookup_name)
+        .limit(1)
+    )
+    if existing and existing.data:
+        species_id = existing.data[0]["id"]
+        _safe_query(
+            supabase.table(SPECIES_TABLE)
+            .update(
+                {
+                    "common_name": common_name or lookup_name,
+                    "scientific_name": lookup_name,
+                    "category": category,
+                    "description": description,
+                    "confidence_score": ai_result.get("confidence_score"),
+                    "updated_at": _now_iso(),
+                }
+            )
+            .eq("id", species_id)
+        )
+        return species_id
+
+    species_id = str(uuid4())
+    _safe_query(
+        supabase.table(SPECIES_TABLE).insert(
+            {
+                "id": species_id,
+                "common_name": common_name or lookup_name,
+                "scientific_name": lookup_name,
+                "category": category,
+                "description": description,
+                "confidence_score": ai_result.get("confidence_score"),
+                "created_at": _now_iso(),
+                "updated_at": _now_iso(),
+            }
+        )
+    )
+    return species_id
+
+
+def _create_location(location_label: Optional[str], latitude: Optional[float], longitude: Optional[float]) -> Optional[str]:
+    has_coordinates = latitude is not None and longitude is not None
+    if not location_label and not has_coordinates:
+        return None
+
+    location_id = str(uuid4())
+    _safe_query(
+        supabase.table(LOCATION_TABLE).insert(
+            {
+                "id": location_id,
+                "label": location_label or "Ubicación sin nombre",
+                "latitude": latitude,
+                "longitude": longitude,
+                "created_at": _now_iso(),
+            }
+        )
+    )
+    return location_id
+
+
+def _sync_profile(user_id: str, email: Optional[str], display_name: Optional[str], avatar_url: Optional[str] = None) -> Dict[str, Any]:
+    payload = {
+        "id": user_id,
+        "email": email,
+        "display_name": display_name,
+        "avatar_url": avatar_url,
+        "updated_at": _now_iso(),
+    }
+    _safe_query(supabase.table(PROFILE_TABLE).upsert(payload))
+    return payload
+
+
+def _fetch_publications(filters: Optional[Dict[str, Any]] = None, limit: int = 50) -> List[Dict[str, Any]]:
+    query = supabase.table(PUBLICATION_TABLE).select("*").order("created_at", desc=True).limit(limit)
+
+    if filters:
+        for field_name, value in filters.items():
+            if value is None:
+                continue
+            query = query.eq(field_name, value)
+
+    response = _safe_query(query)
+    rows = response.data if response and response.data else []
+    return [_shape_publication(row) for row in rows]
+
 
 @router.post("/scan", response_model=ScanResult)
 async def analyze_species(file: UploadFile = File(...)):
     """
-    Recibe la imagen del frontend.
-    Envía la imagen a Gemini 2.5 Flash, y luego almacena en 
-    la base de datos y Storage de Supabase.
+    Análisis IA del archivo subido.
+    Persistencia final ocurre en /publications.
     """
-    
-    # 1. Leer el archivo visual convertido en bytes
+
     img_bytes = await file.read()
-    
-    # 2. Llamada a Gemini en `app/ai_services/vision.py`
     ai_result = analyze_image_with_ai(img_bytes)
-    
-    # 3. Subir foto a Supabase Storage (Buckets)
-    path = f"scans/{ai_result['id']}.jpg"
+    return {
+        **ai_result,
+        "public_url": None,
+    }
+
+
+@router.post("/profiles/sync")
+def sync_profile(payload: ProfileSyncRequest):
+    return _sync_profile(payload.user_id, payload.email, payload.display_name, payload.avatar_url)
+
+
+@router.post("/publications")
+async def create_publication(
+    file: UploadFile = File(...),
+    user_id: str = Form(...),
+    user_email: Optional[str] = Form(None),
+    display_name: Optional[str] = Form(None),
+    common_name: str = Form(...),
+    scientific_name: str = Form(...),
+    description: str = Form(...),
+    confidence_score: float = Form(...),
+    category: str = Form(...),
+    media_type: str = Form("photo"),
+    location_label: Optional[str] = Form(None),
+    latitude: Optional[float] = Form(None),
+    longitude: Optional[float] = Form(None),
+    is_public: bool = Form(True),
+):
+    publication_id = str(uuid4())
+    file_bytes = await file.read()
+    file_extension = os.path.splitext(file.filename or "")[1] or ".jpg"
+    storage_path = f"publications/{user_id}/{publication_id}{file_extension}"
+
     try:
-        res = supabase.storage.from_("zoa_media").upload(path, img_bytes)
-        public_url = supabase.storage.from_("zoa_media").get_public_url(path)
-    except Exception as e:
-        print(f"Error subiendo a Supabase Storage: {e}")
+        supabase.storage.from_(MEDIA_BUCKET).upload(storage_path, file_bytes)
+        public_url = supabase.storage.from_(MEDIA_BUCKET).get_public_url(storage_path)
+    except Exception as exc:
+        print(f"Storage upload failed: {exc}")
         public_url = ""
 
-    # 4. Registrar el evento en la BD de Supabase (SQL)
-    # Puedes crear una tabla llamada "guayanadex_records" en tu panel web de Supabase
-    try:
-        # Esto fallará si aún no se ha puesto la URL y Key en un archivo .env
-        # pero el código ya está listo para cuando tengas tu base de datos lista.
-        record_data = {
-            "id": ai_result["id"],
-            "user_id": "admin", # Cambiar cuando tengas un sistema de login
-            "common_name": ai_result["common_name"],
-            "scientific_name": ai_result["scientific_name"],
-            # "image_url": public_url,
-            "confidence": ai_result["confidence_score"],
-            "description": ai_result["description"]
+    _sync_profile(user_id, user_email, display_name)
+    species_id = _get_or_create_species_id(
+        {
+            "common_name": common_name,
+            "scientific_name": scientific_name,
+            "description": description,
+            "confidence_score": confidence_score,
+            "category": category,
         }
-        # Descomenta esto cuando la tabla "guayanadex_records" esté creada 
-        # y las contraseñas configuradas:
-        # supabase.table("guayanadex_records").insert(record_data).execute()
-        pass
-    except Exception as e:
-        print(f"Error al registrar en la base de datos: {e}")
+    )
+    location_id = _create_location(location_label, latitude, longitude)
 
-    return ai_result
+    publication_payload = {
+        "id": publication_id,
+        "user_id": user_id,
+        "user_email": user_email,
+        "display_name": display_name,
+        "species_id": species_id,
+        "location_id": location_id,
+        "location_label": location_label,
+        "latitude": latitude,
+        "longitude": longitude,
+        "common_name": common_name,
+        "scientific_name": scientific_name,
+        "description": description,
+        "confidence_score": confidence_score,
+        "category": category,
+        "media_type": media_type,
+        "storage_path": storage_path,
+        "media_url": public_url,
+        "is_public": is_public,
+        "created_at": _now_iso(),
+    }
+
+    _safe_query(supabase.table(PUBLICATION_TABLE).insert(publication_payload))
+
+    return {
+        "id": publication_id,
+        "species_id": species_id,
+        "location_id": location_id,
+        "media_url": public_url,
+        "storage_path": storage_path,
+        "media_type": media_type,
+        "is_public": is_public,
+        "common_name": common_name,
+        "scientific_name": scientific_name,
+        "description": description,
+        "confidence_score": confidence_score,
+        "category": category,
+    }
+
+
+@router.get("/publications/feed")
+def get_public_feed(limit: int = 50):
+    return _fetch_publications({"is_public": True}, limit=limit)
+
+
+@router.get("/publications/user/{user_id}")
+def get_user_publications(user_id: str, limit: int = 50):
+    return _fetch_publications({"user_id": user_id}, limit=limit)
+
+
+@router.get("/species/{species_id}/publications")
+def get_species_publications(species_id: str, limit: int = 50):
+    return _fetch_publications({"species_id": species_id}, limit=limit)
+
+
+@router.get("/users/{user_id}/stats")
+def get_user_stats(user_id: str):
+    publications = _fetch_publications({"user_id": user_id}, limit=500)
+    total_publications = len(publications)
+    photo_count = sum(1 for item in publications if item.get("mediaType") == "photo")
+    audio_count = sum(1 for item in publications if item.get("mediaType") == "audio")
+    video_count = sum(1 for item in publications if item.get("mediaType") == "video")
+    species_total = len({item.get("speciesId") for item in publications if item.get("speciesId")})
+    location_total = len({item.get("locationId") for item in publications if item.get("locationId")})
+
+    return {
+        "user_id": user_id,
+        "records_total": total_publications,
+        "publications_total": total_publications,
+        "photos_total": photo_count,
+        "audios_total": audio_count,
+        "videos_total": video_count,
+        "species_total": species_total,
+        "locations_total": location_total,
+    }
+
+
+@router.get("/map/publications")
+def get_map_publications(limit: int = 100):
+    items = _fetch_publications({"is_public": True}, limit=limit)
+    return [item for item in items if item.get("latitude") is not None and item.get("longitude") is not None]
+
 
 @router.get("/guayanadex/{user_id}")
-async def get_user_records(user_id: str):
-    # Query lista para cuando se configure la Database 
-    try:
-        # response = supabase.table("guayanadex_records").select("*").eq("user_id", user_id).execute()
-        # return response.data
-        pass
-    except Exception as e:
-        print(f"Supabase Client no configurado: {e}")
-        
-    # Datos de ejemplo de Guayana mientras pruebas el UI
-    return [
-        {"id": "reg_001", "common_name": "Cardenalito", "scientific_name": "Spinus cucullatus", "photo_url": "url_to_img.jpg", "category": "fauna"},
-        {"id": "reg_002", "common_name": "Oso Palmero", "scientific_name": "Myrmecophaga tridactyla", "photo_url": "url_to_img2.jpg", "category": "fauna"}
-    ]
+def get_user_records(user_id: str):
+    return get_user_publications(user_id)

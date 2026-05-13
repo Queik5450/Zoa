@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, LogIn, UserPlus } from 'lucide-react';
 import Header from '../components/Header';
 import { getMockAuth, getPendingScan, setMockAuth } from '../utils/scanFlow';
+import { apiJson } from '../utils/api';
+import { supabase } from '../utils/supabaseClient';
 
 function AuthPage() {
   const navigate = useNavigate();
@@ -10,6 +12,8 @@ function AuthPage() {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [submitError, setSubmitError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const pendingScan = useMemo(() => getPendingScan(), []);
 
@@ -24,19 +28,67 @@ function AuthPage() {
     }
   }, [navigate, pendingScan]);
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
+    const normalizedEmail = email.trim();
+    const displayName = (fullName || normalizedEmail.split('@')[0] || 'usuario').trim();
 
-    const displayName = (fullName || email.split('@')[0] || 'usuario').trim();
+    setIsSubmitting(true);
+    setSubmitError('');
 
-    setMockAuth({
-      mode,
-      displayName,
-      email,
-      authenticatedAt: Date.now(),
-    });
+    try {
+      const authResult =
+        mode === 'register'
+          ? await supabase.auth.signUp({
+              email: normalizedEmail,
+              password,
+              options: {
+                data: {
+                  full_name: displayName,
+                },
+              },
+            })
+          : await supabase.auth.signInWithPassword({
+              email: normalizedEmail,
+              password,
+            });
 
-    navigate('/analysis', { replace: true });
+      if (authResult.error) {
+        throw authResult.error;
+      }
+
+      const user = authResult.data?.user;
+      if (!user) {
+        throw new Error('No se pudo obtener usuario desde Supabase.');
+      }
+
+      const resolvedDisplayName = user.user_metadata?.full_name || displayName;
+      const resolvedEmail = user.email || normalizedEmail;
+
+      setMockAuth({
+        mode,
+        displayName: resolvedDisplayName,
+        email: resolvedEmail,
+        userId: user.id,
+        authenticatedAt: Date.now(),
+      });
+
+      await apiJson('/profiles/sync', {
+        method: 'POST',
+        body: {
+          user_id: user.id,
+          email: resolvedEmail,
+          display_name: resolvedDisplayName,
+          avatar_url: user.user_metadata?.avatar_url || null,
+        },
+      });
+
+      navigate('/analysis', { replace: true });
+    } catch (error) {
+      setSubmitError(error?.message || 'No se pudo autenticar.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -119,11 +171,14 @@ function AuthPage() {
 
           <button
             type="submit"
+            disabled={isSubmitting}
             className="mt-2 inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[#c1e14f] px-4 text-sm font-bold text-black shadow-[0_8px_20px_rgba(0,0,0,0.12)] transition-transform active:scale-[0.98]"
           >
             {mode === 'login' ? <LogIn size={16} /> : <UserPlus size={16} />}
-            {mode === 'login' ? 'Entrar y analizar' : 'Crear cuenta y analizar'}
+            {isSubmitting ? 'Procesando...' : mode === 'login' ? 'Entrar y analizar' : 'Crear cuenta y analizar'}
           </button>
+
+          {submitError ? <p className="text-sm font-medium text-red-100">{submitError}</p> : null}
         </form>
       </div>
     </div>

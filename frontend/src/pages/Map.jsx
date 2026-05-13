@@ -1,34 +1,100 @@
-import React, { useMemo, useState } from 'react';
-import { ChevronDown, MapPin, Search, X } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ChevronDown, Search, X } from 'lucide-react';
 import { getPublishedCards } from '../utils/scanFlow';
 import { MOCK_MAP_CHIPS } from '../data/zoaMocks';
+import { apiJson } from '../utils/api';
+import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet';
+import L from 'leaflet';
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
+import markerIcon from 'leaflet/dist/images/marker-icon.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+import 'leaflet/dist/leaflet.css';
 
-const SAT_BG = 'https://picsum.photos/seed/zoaMap/1200/900';
+const DEFAULT_CENTER = [5.35, -62.2];
 
-/** Posiciones % de pins de publicaciones cercanas (sin búsqueda). */
-const NEARBY_PIN_OFFSETS = [
-  { left: 14, top: 22 },
-  { left: 42, top: 38 },
-  { left: 58, top: 18 },
-  { left: 72, top: 52 },
-  { left: 28, top: 58 },
-];
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: markerIcon2x,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+});
+
+function AutoFitBounds({ points }) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (!points.length) return;
+
+    const bounds = L.latLngBounds(points.map((point) => [point.latitude, point.longitude]));
+    map.fitBounds(bounds.pad(0.2), { maxZoom: 11 });
+  }, [map, points]);
+
+  return null;
+}
 
 function Map() {
   const [query, setQuery] = useState('');
   const [searchActive, setSearchActive] = useState(false);
+  const [publications, setPublications] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const fallbackPublications = useMemo(() => getPublishedCards().filter((card) => card.latitude && card.longitude), []);
 
-  const published = useMemo(() => getPublishedCards(), []);
+  useEffect(() => {
+    let isActive = true;
 
-  const nearbyPins = useMemo(
-    () =>
-      NEARBY_PIN_OFFSETS.map((p, i) => ({
-        ...p,
-        id: `near-${i}`,
-        label: published[i]?.name,
-      })),
-    [published],
+    async function loadMapPublications() {
+      try {
+        const response = await apiJson('/map/publications?limit=100');
+        if (!isActive) return;
+        setPublications(Array.isArray(response) && response.length > 0 ? response : fallbackPublications);
+      } catch {
+        if (!isActive) return;
+        setPublications(fallbackPublications);
+      } finally {
+        if (isActive) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadMapPublications();
+
+    return () => {
+      isActive = false;
+    };
+  }, [fallbackPublications]);
+
+  const filteredPublications = useMemo(() => {
+    const term = query.trim().toLowerCase();
+    if (!term) {
+      return publications;
+    }
+
+    return publications.filter((item) => {
+      const haystack = [
+        item.name,
+        item.species,
+        item.scientificName,
+        item.location,
+        item.authorName,
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+
+      return haystack.includes(term);
+    });
+  }, [publications, query]);
+
+  const visiblePins = searchActive ? filteredPublications : publications;
+  const stats = useMemo(
+    () => ({
+      photos: filteredPublications.filter((item) => item.mediaType === 'photo' || item.mediaType === undefined).length,
+      audios: filteredPublications.filter((item) => item.mediaType === 'audio').length,
+      collaborators: new Set(filteredPublications.map((item) => item.userId).filter(Boolean)).size,
+    }),
+    [filteredPublications],
   );
+  const selectedPublication = filteredPublications[0] || visiblePins[0] || null;
 
   const runSearch = (e) => {
     e?.preventDefault?.();
@@ -47,7 +113,7 @@ function Map() {
 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col">
-      <div className="absolute inset-0 bg-neutral-300 bg-cover bg-center" style={{ backgroundImage: `url(${SAT_BG})` }} />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#dfe7cf] via-transparent to-[#eef3f8]" />
       <div className="pointer-events-none absolute inset-0 bg-black/12" />
 
       <div className="relative z-10 flex min-h-0 flex-1 flex-col px-3 pt-2">
@@ -91,23 +157,40 @@ function Map() {
           </div>
         </form>
 
-        <div className="relative mt-3 min-h-[140px] flex-1">
-          {(searchActive ? NEARBY_PIN_OFFSETS.slice(0, 3).map((p, i) => ({ ...p, id: `s-${i}` })) : nearbyPins).map((pin) => (
-            <div
-              key={pin.id}
-              className="absolute drop-shadow-md"
-              style={{ left: `${pin.left}%`, top: `${pin.top}%` }}
-              title={pin.label || 'Publicación cercana'}
-            >
-              <MapPin className="h-9 w-9 text-[#c1e14f]" fill="#c1e14f" strokeWidth={1} />
+        <div className="relative mt-3 min-h-[240px] flex-1 overflow-hidden rounded-[28px] border border-white/50 shadow-[0_18px_40px_rgba(0,0,0,0.12)]">
+          {isLoading ? (
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/75 text-sm font-semibold text-neutral-700 backdrop-blur-sm">
+              Cargando mapa...
             </div>
-          ))}
+          ) : null}
+
+          <MapContainer center={DEFAULT_CENTER} zoom={5} className="h-full w-full">
+            <TileLayer
+              attribution='&copy; OpenStreetMap contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+            <AutoFitBounds points={visiblePins.filter((item) => Number.isFinite(item.latitude) && Number.isFinite(item.longitude))} />
+            {visiblePins
+              .filter((item) => Number.isFinite(item.latitude) && Number.isFinite(item.longitude))
+              .map((pin) => (
+                <Marker key={pin.id} position={[pin.latitude, pin.longitude]}>
+                  <Popup>
+                    <div className="max-w-[220px] space-y-1">
+                      <p className="text-sm font-bold text-black">{pin.name || 'Publicación'}</p>
+                      <p className="text-xs text-neutral-600">{pin.scientificName || pin.species || 'Sin especie'}</p>
+                      <p className="text-xs text-neutral-600">{pin.location || 'Sin ubicación'}</p>
+                      <p className="text-xs text-neutral-500">{pin.authorName || 'Usuario'}</p>
+                    </div>
+                  </Popup>
+                </Marker>
+              ))}
+          </MapContainer>
         </div>
 
         {!searchActive ? (
           <div className="pointer-events-auto mt-auto shrink-0 rounded-t-2xl border border-white/60 bg-white/90 px-4 py-2.5 text-center shadow-[0_-4px_20px_rgba(0,0,0,0.08)] backdrop-blur-sm">
-            <p className="text-xs font-semibold text-neutral-700">Publicaciones cercanas en el mapa</p>
-            <p className="mt-0.5 text-[11px] text-neutral-500">Busca para ver detalle de animal, zona y especies</p>
+            <p className="text-xs font-semibold text-neutral-700">{publications.length} publicaciones con ubicación</p>
+            <p className="mt-0.5 text-[11px] text-neutral-500">Busca animal, especie o zona para filtrar pins reales</p>
           </div>
         ) : (
           <section className="pointer-events-auto relative z-20 mt-auto flex max-h-[min(52vh,480px)] min-h-0 flex-col overflow-hidden rounded-t-3xl border border-neutral-100 bg-white shadow-[0_-8px_30px_rgba(0,0,0,0.12)]">
@@ -118,15 +201,15 @@ function Map() {
               </p>
               <div className="grid grid-cols-3 gap-2 border-b border-neutral-200 pb-3 text-center text-[11px] font-semibold leading-tight text-neutral-700">
                 <div className="rounded-lg bg-[#f4f7e8] px-1 py-2">
-                  <span className="block text-lg font-black text-[#c1e14f]">5</span>
+                  <span className="block text-lg font-black text-[#c1e14f]">{stats.audios}</span>
                   Audios
                 </div>
                 <div className="rounded-lg bg-[#f4f7e8] px-1 py-2">
-                  <span className="block text-lg font-black text-[#c1e14f]">10</span>
+                  <span className="block text-lg font-black text-[#c1e14f]">{stats.photos}</span>
                   Fotos
                 </div>
                 <div className="rounded-lg bg-[#f4f7e8] px-1 py-2">
-                  <span className="block text-lg font-black text-[#c1e14f]">5</span>
+                  <span className="block text-lg font-black text-[#c1e14f]">{stats.collaborators}</span>
                   Colaboradores
                 </div>
               </div>
@@ -137,16 +220,19 @@ function Map() {
                 <h3 className="text-xs font-bold uppercase tracking-wide text-[#80902e]">Animal o planta</h3>
                 <div className="mt-2 flex gap-3">
                   <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-neutral-200 bg-neutral-200">
-                    <img
-                      src="https://picsum.photos/seed/zoaMonkey/160/160"
-                      alt=""
-                      className="h-full w-full object-cover"
-                      loading="lazy"
-                    />
+                    {selectedPublication?.image ? (
+                      <img
+                        src={selectedPublication.image}
+                        alt=""
+                        className="h-full w-full object-cover"
+                        loading="lazy"
+                      />
+                    ) : null}
                   </div>
                   <p className="text-sm leading-relaxed text-neutral-800">
-                    Información del animal o planta buscado (si aplica): nombre común, datos básicos y enlaces a
-                    registros.
+                    {selectedPublication
+                      ? `${selectedPublication.name} · ${selectedPublication.scientificName || 'Sin nombre científico'}`
+                      : 'Sin coincidencias aún. Ajusta búsqueda o publica una observación con ubicación.'}
                   </p>
                 </div>
               </article>
@@ -154,19 +240,19 @@ function Map() {
               <article className="mt-3 rounded-2xl border border-neutral-200 bg-white p-3 shadow-sm">
                 <h3 className="text-xs font-bold uppercase tracking-wide text-[#80902e]">La zona</h3>
                 <p className="mt-2 text-sm leading-relaxed text-neutral-800">
-                  Descripción geográfica, clima, tipo de ecosistema y puntos de interés cercanos a la búsqueda.
+                  {selectedPublication?.location || 'Ubicación conectada al pin de la publicación.'}
                 </p>
               </article>
 
               <article className="mt-3 rounded-2xl border border-neutral-200 bg-[#f8faf4] p-3 shadow-sm">
                 <h3 className="text-xs font-bold uppercase tracking-wide text-[#80902e]">Animales en la zona</h3>
                 <p className="mt-2 text-sm leading-relaxed text-neutral-800">
-                  Listado o resumen de especies frecuentes en esta área según avistamientos de la comunidad.
+                  Publicaciones del mundo para esta especie o zona.
                 </p>
                 <ul className="mt-2 list-inside list-disc text-sm text-neutral-700">
-                  <li>Mono capuchino</li>
-                  <li>Tucán</li>
-                  <li>Iguana verde</li>
+                  {filteredPublications.slice(0, 3).map((item) => (
+                    <li key={item.id}>{item.name || item.scientificName || 'Publicación sin nombre'}</li>
+                  ))}
                 </ul>
               </article>
             </div>
