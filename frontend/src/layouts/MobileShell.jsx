@@ -56,7 +56,7 @@ export default function MobileShell() {
     <div className="relative flex min-h-[100dvh] w-full flex-col overflow-hidden bg-[#eef3f8] font-sans [--zoa-shell-width:min(100vw,402px)] [--zoa-header-height:clamp(76px,24vw,97px)] [--zoa-bottom-height:clamp(64px,19vw,76px)]">
       <Header />
 
-      <div className="mx-auto flex min-h-0 w-full max-w-[var(--zoa-shell-width)] flex-1 flex-col overflow-y-auto overflow-x-hidden px-0 pt-[var(--zoa-header-height)] pb-[calc(var(--zoa-bottom-height)+32px)]">
+      <div className="mx-auto flex min-h-0 w-full max-w-[var(--zoa-shell-width)] flex-1 flex-col overflow-y-auto overflow-x-hidden px-0 pt-[var(--zoa-header-height)] pb-2">
         {statusMessage ? (
           <div className="mx-4 mt-3 shrink-0 rounded-2xl border border-[#c1e14f]/30 bg-white/90 px-4 py-3 text-sm font-medium text-[#2d3319] shadow-sm">
             {statusMessage}
@@ -65,7 +65,7 @@ export default function MobileShell() {
         <Outlet />
       </div>
 
-      <footer className="fixed inset-x-0 bottom-0 z-50 w-full pb-[env(safe-area-inset-bottom)]">
+      <footer className="fixed inset-x-0 bottom-[-6px] z-50 w-full">
         <div className="mx-auto w-full max-w-[var(--zoa-shell-width)]">
           <BottomNav isScanning={isScanning} onFileChange={handleFileChange} />
         </div>
