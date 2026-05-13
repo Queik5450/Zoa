@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Header from '../../../shared/components/Header';
-import { hydrateMockAuthFromSession, signInWithGoogle } from '../../../shared/lib/auth';
+import { hydrateMockAuthFromSession } from '../../../shared/lib/auth';
 import { supabase } from '../../../shared/lib/supabaseClient';
 import { getPendingPublicationDraft, publishPendingPublicationDraft, savePendingPublicationDraft } from '../../../shared/lib/publicationDraft';
 import { apiJson } from '../../../shared/lib/api';
@@ -100,26 +100,14 @@ function Register() {
     }
   };
 
-  const handleGoogleLogin = async () => {
-    setSubmitError('');
-    setIsSubmitting(true);
-
-    try {
-      await signInWithGoogle('/register');
-    } catch (error) {
-      setSubmitError(error?.message || 'No se pudo iniciar sesión con Google.');
-      setIsSubmitting(false);
-    }
-  };
-
   return (
     <div className="flex min-h-[100dvh] flex-col bg-white font-sans text-[#111]">
-      <Header />
+      <Header compact />
 
-      <div className="mx-auto flex w-full max-w-[406px] flex-1 flex-col items-center px-4 pb-8 pt-8 sm:px-[35px] sm:pb-10 sm:pt-12">
+      <div className="mx-auto flex w-full max-w-[520px] flex-1 flex-col items-center px-5 pb-10 pt-6 sm:px-[40px] sm:pb-12 sm:pt-8">
         <div className="self-stretch flex flex-col items-center justify-center text-center">
-          <h1 className="text-[clamp(1.55rem,5vw,2.2rem)] font-semibold text-black">Registro de Usuario</h1>
-          <p className="mt-3 text-[14px] text-black sm:text-[15px]">
+          <h1 className="text-[clamp(2rem,5.5vw,2.9rem)] font-semibold text-black">Registro de Usuario</h1>
+          <p className="mt-3 text-[15px] text-black sm:text-[16px]">
             ¿Ya tienes cuenta?{' '}
             <Link to="/login" className="italic text-[#7d8d42] underline underline-offset-2">
               Inicia Sesión
@@ -129,37 +117,28 @@ function Register() {
 
         <form
           onSubmit={handleSubmit}
-          className="mt-12 w-full max-w-[360px] rounded-[20px] bg-[#7f962b] px-0 pb-[24px] pt-5 shadow-[0_4px_4px_rgba(0,0,0,0.25)] sm:mt-[84px] sm:pb-[31px] sm:pt-6"
+          className="mt-8 w-full max-w-[430px] rounded-[28px] bg-[#7f962b] px-0 pb-7 pt-6 shadow-[0_12px_28px_rgba(0,0,0,0.18)] sm:mt-10 sm:pb-8 sm:pt-7"
         >
-          <div className="mx-auto flex w-full max-w-[320px] flex-col gap-3 px-4 text-white sm:px-0">
-            <button
-              type="button"
-              onClick={handleGoogleLogin}
-              disabled={isSubmitting}
-              className="rounded-lg bg-white py-2 text-center text-[14px] font-semibold text-[#1e1e1e] shadow-[0px_4px_4px_rgba(0,_0,_0,_0.25)] disabled:opacity-70 sm:text-[15px]"
-            >
-              Continuar con Google
-            </button>
-
+          <div className="mx-auto flex w-full max-w-[360px] flex-col gap-4 px-5 text-white sm:px-0">
             <div className="flex flex-col gap-[3px]">
-              <label className="text-left text-[14px] sm:text-[15px]">Correo electrónico</label>
+              <label className="text-left text-[15px] sm:text-[16px]">Correo electrónico</label>
               <input
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 type="email"
                 required
-                className="h-11 w-full rounded-lg bg-white pl-3 text-black shadow-[0px_4px_4px_rgba(0,_0,_0,_0.25)] outline-none sm:h-[33px]"
+                className="h-13 w-full rounded-xl bg-white px-4 text-[15px] text-black shadow-[0px_4px_4px_rgba(0,_0,_0,_0.25)] outline-none sm:h-14 sm:text-[16px]"
                 autoComplete="email"
               />
             </div>
 
             <div className="flex flex-col gap-[3px]">
-              <label className="text-left text-[14px] sm:text-[15px]">Username</label>
+              <label className="text-left text-[15px] sm:text-[16px]">Username</label>
               <input
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
-                className="h-11 w-full rounded-lg bg-white pl-3 text-black shadow-[0px_4px_4px_rgba(0,_0,_0,_0.25)] outline-none sm:h-[33px]"
+                className="h-13 w-full rounded-xl bg-white px-4 text-[15px] text-black shadow-[0px_4px_4px_rgba(0,_0,_0,_0.25)] outline-none sm:h-14 sm:text-[16px]"
                 autoComplete="username"
               />
               <p className="text-[10px] leading-snug text-[#c8d68b] sm:text-[11px]">
@@ -169,7 +148,7 @@ function Register() {
             </div>
 
             <div className="flex flex-col gap-[5px]">
-              <label className="text-left text-[14px] sm:text-[15px]">
+              <label className="text-left text-[15px] sm:text-[16px]">
                 Contraseña <span className="text-red-400">*</span>
               </label>
               <input
@@ -178,7 +157,7 @@ function Register() {
                 type="password"
                 required
                 minLength={8}
-                className="h-11 w-full rounded-lg bg-white pl-3 text-black shadow-[0px_4px_4px_rgba(0,_0,_0,_0.25)] outline-none sm:h-[33px]"
+                className="h-13 w-full rounded-xl bg-white px-4 text-[15px] text-black shadow-[0px_4px_4px_rgba(0,_0,_0,_0.25)] outline-none sm:h-14 sm:text-[16px]"
                 autoComplete="new-password"
               />
               <p className="text-[10px] leading-snug text-[#c8d68b] sm:text-[11px]">
@@ -189,7 +168,7 @@ function Register() {
             <button
               type="submit"
               disabled={isSubmitting || rateLimitRemainingMs > 0}
-              className="mt-1 rounded-lg bg-[#c1e734] py-2 text-center text-[14px] font-semibold text-[#1e1e1e] shadow-[0px_4px_4px_rgba(0,_0,_0,_0.25)] disabled:opacity-70 sm:text-[15px]"
+              className="mt-2 rounded-xl bg-[#c1e734] py-3 text-center text-[15px] font-semibold text-[#1e1e1e] shadow-[0px_4px_4px_rgba(0,_0,_0,_0.25)] disabled:opacity-70 sm:py-3.5 sm:text-[16px]"
             >
               {isSubmitting ? 'Registrando...' : 'Registrarse'}
             </button>

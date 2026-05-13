@@ -1,7 +1,8 @@
 import React from 'react';
+import logo from '../shared/assets/icons/logo.png';
 
 /**
- * Cabecera "Parte arriba": imagen de fondo con texto ZOA centrado.
+ * Cabecera "Parte arriba": imagen de fondo con el logo centrado.
  */
 function Header() {
   return (
@@ -15,17 +16,12 @@ function Header() {
           aria-label="ZOA"
         >
           <path d="M0 0H406V89C248.6 70.4334 159.935 69.6625 0 89V0Z" fill="#C1E734" />
-          <text
-            x="203"
-            y="30"
-            textAnchor="middle"
-            dominantBaseline="middle"
-            fill="#000000"
-            style={{ fontFamily: 'Arial, Helvetica, sans-serif', fontSize: '32px', fontWeight: 800 }}
-          >
-            ZOA
-          </text>
         </svg>
+        <img
+          src={logo}
+          alt="Zoa"
+          className="pointer-events-none absolute left-1/2 top-1/2 h-[clamp(88px,24vw,136px)] w-auto max-w-[96%] -translate-x-1/2 -translate-y-1/2 object-contain"
+        />
       </div>
     </header>
   );

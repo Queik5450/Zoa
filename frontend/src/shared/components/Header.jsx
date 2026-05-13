@@ -1,11 +1,15 @@
 import React from 'react';
+import logo from '../assets/icons/logo.png';
 
 /**
- * Cabecera "Parte arriba": imagen de fondo con texto ZOA centrado.
+ * Cabecera "Parte arriba": imagen de fondo con el logo centrado.
  */
-function Header() {
+function Header({ compact = false }) {
+  const headerHeightClass = compact ? 'h-[clamp(76px,16vw,104px)]' : 'h-[var(--zoa-header-height)]';
+  const logoHeightClass = compact ? 'h-[clamp(56px,14vw,92px)]' : 'h-[clamp(88px,24vw,136px)]';
+
   return (
-    <header className="relative z-30 h-[var(--zoa-header-height)] w-[100vw] shrink-0 [margin-left:calc(50%-50vw)]">
+    <header className={`relative z-30 w-[100vw] shrink-0 [margin-left:calc(50%-50vw)] ${headerHeightClass}`}>
       <div className="relative h-full w-full overflow-hidden shadow-[0_4px_16px_rgba(0,0,0,0.12)]">
         <svg
           viewBox="0 0 406 89"
@@ -15,17 +19,12 @@ function Header() {
           aria-label="ZOA"
         >
           <path d="M0 0H406V89C248.6 70.4334 159.935 69.6625 0 89V0Z" fill="#C1E734" />
-          <text
-            x="203"
-            y="30"
-            textAnchor="middle"
-            dominantBaseline="middle"
-            fill="#000000"
-            style={{ fontFamily: 'Arial, Helvetica, sans-serif', fontSize: '32px', fontWeight: 800 }}
-          >
-            ZOA
-          </text>
         </svg>
+        <img
+          src={logo}
+          alt="Zoa"
+          className={`pointer-events-none absolute left-1/2 top-1/2 w-auto max-w-[96%] -translate-x-1/2 -translate-y-1/2 object-contain ${logoHeightClass}`}
+        />
       </div>
     </header>
   );

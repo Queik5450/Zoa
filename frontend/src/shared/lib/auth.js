@@ -1,25 +1,6 @@
 import { apiJson } from './api';
 import { setMockAuth } from './scanFlow';
-import { isSupabaseConfigured, supabase } from './supabaseClient';
-
-export async function signInWithGoogle(redirectPath = '/auth') {
-  if (!isSupabaseConfigured) {
-    throw new Error('Falta configurar VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY en frontend/.env.');
-  }
-
-  const redirectTo = `${window.location.origin}${redirectPath}`;
-
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: {
-      redirectTo,
-    },
-  });
-
-  if (error) {
-    throw error;
-  }
-}
+import { supabase } from './supabaseClient';
 
 export async function hydrateMockAuthFromSession(mode = 'login', fallbackDisplayName = 'usuario') {
   const { data, error } = await supabase.auth.getSession();

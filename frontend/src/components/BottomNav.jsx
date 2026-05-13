@@ -4,7 +4,7 @@ import camaraSvg from './icons/camara.svg?raw';
 import homeSvg from './icons/home.svg?raw';
 import perfilSvg from './icons/perfil.svg?raw';
 import mapaSvg from './icons/mapa.svg?raw';
-import miZoologicoSvg from './icons/Book.svg?raw';
+import miAlbumIcon from '../shared/assets/icons/BookSelected.png';
 import { fileToDataUrl, savePendingScan } from '../shared/lib/scanFlow';
 
 const ACCENT = '#96b232'; // Aproximado al verde oscuro de la imagen
@@ -24,7 +24,7 @@ const cleanSvgColors = (svg, color) => {
   return cleaned;
 };
 
-function NavItem({ active, svgRaw, label, onClick }) {
+function NavItem({ active, svgRaw, iconSrc, label, onClick }) {
   const color = active ? ACCENT : MUTED;
   return (
     <button
@@ -35,9 +35,19 @@ function NavItem({ active, svgRaw, label, onClick }) {
       }`}
     >
       <span
-        className="flex h-[26px] w-[26px] shrink-0 items-center justify-center bg-transparent [&>svg]:h-full [&>svg]:w-full"
-        dangerouslySetInnerHTML={{ __html: cleanSvgColors(svgRaw, color) }}
+        className="flex h-[26px] w-[26px] shrink-0 items-center justify-center bg-transparent"
+        aria-hidden
       />
+      {iconSrc ? (
+        <img src={iconSrc} alt="" className="absolute top-2 h-[26px] w-[26px] object-contain" aria-hidden />
+      ) : null}
+      {svgRaw ? (
+        <span
+          className="absolute top-2 flex h-[26px] w-[26px] items-center justify-center bg-transparent [&>svg]:h-full [&>svg]:w-full"
+          aria-hidden
+          dangerouslySetInnerHTML={{ __html: cleanSvgColors(svgRaw, color) }}
+        />
+      ) : null}
       <span
         className={`mt-1 truncate text-center text-[11px] font-bold leading-none tracking-tight ${active ? 'text-[#96b232]' : 'text-[#7B7B7B]'}`}
       >
@@ -80,7 +90,7 @@ function BottomNav() {
         </div>
         <div className="w-[20%]" />
         <div className="flex w-[40%] items-end justify-around pl-1">
-          <NavItem active={isAlbum} svgRaw={miZoologicoSvg} label="Mi Album" onClick={() => navigate('/album')} />
+          <NavItem active={isAlbum} iconSrc={miAlbumIcon} label="Mi Album" onClick={() => navigate('/album')} />
           <NavItem active={isProfile} svgRaw={perfilSvg} label="Perfil" onClick={() => navigate('/profile')} />
         </div>
       </div>

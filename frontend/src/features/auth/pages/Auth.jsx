@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, LogIn, UserPlus } from 'lucide-react';
 import Header from '../../../shared/components/Header';
 import { getMockAuth, getPendingScan, setMockAuth } from '../../../shared/lib/scanFlow';
-import { hydrateMockAuthFromSession, signInWithGoogle } from '../../../shared/lib/auth';
+import { hydrateMockAuthFromSession } from '../../../shared/lib/auth';
 import { supabase } from '../../../shared/lib/supabaseClient';
 import { apiJson } from '../../../shared/lib/api';
 import { getAuthCooldownRemainingMs, startAuthRateLimit } from '../../../shared/lib/authRateLimit';
@@ -158,18 +158,6 @@ function AuthPage() {
     }
   };
 
-  const handleGoogleLogin = async () => {
-    setSubmitError('');
-    setIsSubmitting(true);
-
-    try {
-      await signInWithGoogle('/auth');
-    } catch (error) {
-      setSubmitError(error?.message || 'No se pudo iniciar sesión con Google.');
-      setIsSubmitting(false);
-    }
-  };
-
   return (
     <div className="flex min-h-[100dvh] flex-col bg-[#eef3f8] font-sans">
       <Header />
@@ -213,15 +201,6 @@ function AuthPage() {
           onSubmit={handleSubmit}
           className="mx-auto mt-6 w-full space-y-4 rounded-3xl border-2 border-black/10 bg-[#80902e] p-6 shadow-[0_16px_40px_rgba(128,144,46,0.35)]"
         >
-          <button
-            type="button"
-            onClick={handleGoogleLogin}
-            disabled={isSubmitting}
-            className="inline-flex h-12 w-full items-center justify-center rounded-2xl bg-white px-4 text-sm font-bold text-black shadow-[0_8px_20px_rgba(0,0,0,0.12)] transition-transform active:scale-[0.98] disabled:opacity-70"
-          >
-            Continuar con Google
-          </button>
-
           <div>
             <label className="mb-1.5 block text-xs font-semibold text-white">Nombre</label>
             <input
