@@ -4,6 +4,7 @@ import Header from '../../../shared/components/Header';
 import { hydrateMockAuthFromSession, signInWithGoogle } from '../../../shared/lib/auth';
 import { supabase } from '../../../shared/lib/supabaseClient';
 import { getPendingPublicationDraft, publishPendingPublicationDraft, savePendingPublicationDraft } from '../../../shared/lib/publicationDraft';
+import { apiJson } from '../../../shared/lib/api';
 
 function Register() {
   const navigate = useNavigate();
@@ -23,6 +24,18 @@ function Register() {
     setSubmitError('');
 
     try {
+      try {
+        const existsPayload = await apiJson(`/profiles/exists?email=${encodeURIComponent(normalizedEmail.toLowerCase())}`);
+        if (existsPayload?.exists) {
+          throw new Error('Este correo ya está registrado. Inicia sesión.');
+        }
+      } catch (preCheckError) {
+        if (preCheckError?.message === 'Este correo ya está registrado. Inicia sesión.') {
+          throw preCheckError;
+        }
+        // best-effort precheck; continue with signup if endpoint unavailable
+      }
+
       const authResult = await supabase.auth.signUp({
         email: normalizedEmail,
         password,

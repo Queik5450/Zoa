@@ -64,6 +64,20 @@ function AuthPage() {
     setSubmitError('');
 
     try {
+      if (mode === 'register') {
+        try {
+          const existsPayload = await apiJson(`/profiles/exists?email=${encodeURIComponent(normalizedEmail.toLowerCase())}`);
+          if (existsPayload?.exists) {
+            throw new Error('Este correo ya está registrado. Inicia sesión.');
+          }
+        } catch (preCheckError) {
+          if (preCheckError?.message === 'Este correo ya está registrado. Inicia sesión.') {
+            throw preCheckError;
+          }
+          // best-effort precheck; continue if endpoint unavailable
+        }
+      }
+
       const authResult =
         mode === 'register'
           ? await supabase.auth.signUp({

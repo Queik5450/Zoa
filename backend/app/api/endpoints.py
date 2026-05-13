@@ -192,6 +192,22 @@ def sync_profile(payload: ProfileSyncRequest):
     return _sync_profile(payload.user_id, payload.email, payload.display_name, payload.avatar_url)
 
 
+@router.get("/profiles/exists")
+def profile_exists(email: str):
+    normalized_email = (email or "").strip().lower()
+    if not normalized_email:
+        return {"exists": False}
+
+    response = _safe_query(
+        supabase.table(PROFILE_TABLE)
+        .select("id")
+        .eq("email", normalized_email)
+        .limit(1)
+    )
+    exists = bool(response and response.data)
+    return {"exists": exists}
+
+
 @router.post("/publications")
 async def create_publication(
     file: UploadFile = File(...),
