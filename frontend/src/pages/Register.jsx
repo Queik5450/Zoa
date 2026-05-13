@@ -24,21 +24,21 @@ function Register() {
   return (
     <div className="flex min-h-[100dvh] flex-col bg-white font-sans">
       <Header />
-      <div className="flex flex-1 flex-col px-5 pb-10 pt-6">
+      <div className="mx-auto flex w-full max-w-sm flex-1 flex-col px-10 pb-12 pt-16">
         <h1 className="text-center text-xl font-bold text-black">Registrarse en ZOA</h1>
-        <p className="mt-2 text-center text-sm text-black">
+        <p className="mt-3 text-center text-sm text-black">
           ¿Ya tienes cuenta?{' '}
-          <Link to="/login" className="font-semibold text-[#80902e] underline">
+          <Link to="/login" className="font-semibold text-[#80902e] underline underline-offset-2">
             Inicia Sesión
           </Link>
         </p>
 
         <form
           onSubmit={handleSubmit}
-          className="mt-8 space-y-4 rounded-3xl bg-[#80902e] p-6 shadow-[0_16px_40px_rgba(128,144,46,0.35)]"
+          className="mt-10 w-full space-y-4 rounded-[28px] bg-[#80902e] p-7 shadow-[0_18px_45px_rgba(128,144,46,0.38)]"
         >
           <div>
-            <label className="mb-1.5 block text-xs font-semibold text-white">Correo electrónico</label>
+            <label className="mb-2 block text-xs font-semibold text-white">Correo electrónico</label>
             <input
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -48,20 +48,20 @@ function Register() {
             />
           </div>
           <div>
-            <label className="mb-1.5 block text-xs font-semibold text-white">Username</label>
+            <label className="mb-2 block text-xs font-semibold text-white">Username</label>
             <input
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               className="h-12 w-full rounded-2xl border border-black/5 bg-white px-4 text-sm text-black shadow-[inset_0_2px_6px_rgba(0,0,0,0.06)] outline-none"
               required
             />
-            <p className="mt-1.5 text-[11px] leading-snug text-[#c8d68b]">
+            <p className="mt-2 text-[11px] leading-snug text-[#c8d68b]">
               *El nombre de usuario solo puede contener caracteres alfanuméricos o guiones simples, y no puede comenzar
               ni terminar con un guion.
             </p>
           </div>
           <div>
-            <label className="mb-1.5 block text-xs font-semibold text-white">
+            <label className="mb-2 block text-xs font-semibold text-white">
               Contraseña <span className="text-red-400">*</span>
             </label>
             <input
@@ -72,13 +72,13 @@ function Register() {
               minLength={8}
               className="h-12 w-full rounded-2xl border border-black/5 bg-white px-4 text-sm text-black shadow-[inset_0_2px_6px_rgba(0,0,0,0.06)] outline-none"
             />
-            <p className="mt-1.5 text-[11px] leading-snug text-[#c8d68b]">
+            <p className="mt-2 text-[11px] leading-snug text-[#c8d68b]">
               *Debe tener al menos 8 caracteres, incluir una mayúscula, una minúscula, un número y un símbolo.
             </p>
           </div>
           <button
             type="submit"
-            className="mt-3 h-12 w-full rounded-2xl bg-[#c1e14f] text-sm font-bold text-black shadow-[0_8px_20px_rgba(0,0,0,0.12)]"
+            className="mt-2 h-12 w-full rounded-2xl bg-[#c1e14f] text-sm font-bold text-black shadow-[0_8px_22px_rgba(0,0,0,0.14)]"
           >
             Registrarse
           </button>

@@ -53,19 +53,27 @@ export default function MobileShell() {
   };
 
   return (
-    <div className="relative flex h-[100dvh] w-full max-w-md mx-auto flex-col overflow-hidden bg-[#eef3f8] font-sans">
+    <div className="relative flex min-h-[100dvh] w-full flex-col overflow-hidden bg-[#eef3f8] font-sans [--zoa-shell-width:min(100vw,402px)] [--zoa-header-height:clamp(76px,24vw,97px)] [--zoa-bottom-height:clamp(64px,19vw,76px)]">
       <Header />
-      {statusMessage ? (
-        <div className="mx-4 mt-3 rounded-2xl border border-[#c1e14f]/30 bg-white/90 px-4 py-3 text-sm font-medium text-[#2d3319] shadow-sm">
-          {statusMessage}
+
+      <div className="mx-auto flex min-h-0 w-full max-w-[var(--zoa-shell-width)] flex-1 flex-col overflow-y-auto overflow-x-hidden px-0 pt-[var(--zoa-header-height)] pb-[calc(var(--zoa-bottom-height)+32px)]">
+        {statusMessage ? (
+          <div className="mx-4 mt-3 shrink-0 rounded-2xl border border-[#c1e14f]/30 bg-white/90 px-4 py-3 text-sm font-medium text-[#2d3319] shadow-sm">
+            {statusMessage}
+          </div>
+        ) : null}
+        <Outlet />
+      </div>
+
+      <footer className="fixed inset-x-0 bottom-0 z-50 w-full pb-[env(safe-area-inset-bottom)]">
+        <div className="mx-auto w-full max-w-[var(--zoa-shell-width)]">
+          <BottomNav isScanning={isScanning} onFileChange={handleFileChange} />
         </div>
-      ) : null}
-      <Outlet />
-      <BottomNav isScanning={isScanning} onFileChange={handleFileChange} />
+      </footer>
 
       {capturePreview ? (
-        <div className="absolute inset-0 z-40 flex items-end bg-black/45 px-4 pb-6 pt-16 backdrop-blur-[2px]">
-          <section className="w-full overflow-hidden rounded-[28px] bg-white shadow-[0_-18px_50px_rgba(0,0,0,0.24)]">
+        <div className="fixed inset-0 z-[140] flex items-end justify-center bg-black/45 px-4 pb-6 pt-16 backdrop-blur-[2px]">
+          <section className="w-full max-w-md overflow-hidden rounded-[28px] bg-white shadow-[0_-18px_50px_rgba(0,0,0,0.24)]">
             <div className="flex items-center justify-between px-4 pb-3 pt-3">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#80902e]">Foto tomada</p>

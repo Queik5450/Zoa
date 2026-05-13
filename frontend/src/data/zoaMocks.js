@@ -7,32 +7,28 @@ export const MOCK_ALBUM_ANIMALS = [
     id: 'a1',
     name: 'Mono Capuchino',
     badge: '1',
-    image:
-      'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=600&q=80',
+    image: 'https://picsum.photos/seed/zoaA1/600/800',
     speciesId: 'mono-capuchino',
   },
   {
     id: 'a2',
     name: 'Tucán',
     badge: '10',
-    image:
-      'https://images.unsplash.com/photo-1551986782-d0169e1df9fa?auto=format&fit=crop&w=600&q=80',
+    image: 'https://picsum.photos/seed/zoaA2/600/800',
     speciesId: 'tucan',
   },
   {
     id: 'a3',
     name: 'Mono 2',
     badge: '1k',
-    image:
-      'https://images.unsplash.com/photo-1564349683136-77e92550dccc?auto=format&fit=crop&w=600&q=80',
+    image: 'https://picsum.photos/seed/zoaA3/600/800',
     speciesId: 'mono-capuchino',
   },
   {
     id: 'a4',
     name: 'Mono Capuchino',
     badge: '1',
-    image:
-      'https://images.unsplash.com/photo-1583212292454-1fe6229606b2?auto=format&fit=crop&w=600&q=80',
+    image: 'https://picsum.photos/seed/zoaA4/600/800',
     speciesId: 'mono-capuchino',
   },
 ];
@@ -42,32 +38,28 @@ export const MOCK_ALBUM_PLANTS = [
     id: 'p1',
     name: 'Nombre Planta',
     badge: '1',
-    image:
-      'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=600&q=80',
+    image: 'https://picsum.photos/seed/zoaP1/600/800',
     speciesId: 'flor-mayo',
   },
   {
     id: 'p2',
     name: 'Nombre Planta',
     badge: '10',
-    image:
-      'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=600&q=80',
+    image: 'https://picsum.photos/seed/zoaP2/600/800',
     speciesId: 'flor-mayo',
   },
   {
     id: 'p3',
     name: 'Nombre Planta',
     badge: '1k',
-    image:
-      'https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&w=600&q=80',
+    image: 'https://picsum.photos/seed/zoaP3/600/800',
     speciesId: 'flor-mayo',
   },
   {
     id: 'p4',
     name: 'Nombre Planta',
     badge: '1',
-    image:
-      'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=600&q=80',
+    image: 'https://picsum.photos/seed/zoaP4/600/800',
     speciesId: 'flor-mayo',
   },
 ];
@@ -117,6 +109,5 @@ export const MOCK_HOME_CARD_EXTRA = {
   location: 'Parque Nacional Canaima',
   likes: '1k',
   comments: '100',
-  image:
-    'https://images.unsplash.com/photo-1490750967868-88aa4486c946?auto=format&fit=crop&w=600&q=80',
+  image: 'https://picsum.photos/seed/zoaFlor/600/800',
 };

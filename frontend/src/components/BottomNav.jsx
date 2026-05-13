@@ -5,26 +5,49 @@ import homeSvg from './incons/home.svg?raw';
 import perfilSvg from './incons/perfil.svg?raw';
 import mapaSvg from './incons/mapa.svg?raw';
 import miZoologicoSvg from './incons/Book.svg?raw';
+import bottomSvgUrl from '../assets/bottom.svg?url';
 
-const ACCENT = '#c1e14f';
+const ACCENT = '#96b232'; // Aproximado al verde oscuro de la imagen
 const MUTED = '#7B7B7B';
 
-const tintSvg = (svg, color) =>
-  svg.replace(/fill="(?:#7B7B7B|#7b7b7b|white|#FFFFFF|none)"/g, `fill="${color}"`);
+const cleanSvgColors = (svg, color) => {
+  if (!svg) return '';
+  let cleaned = svg.replace(/fill="([^"]+)"/gi, (match, p1) => {
+    if (p1.toLowerCase() === 'none' || p1.toLowerCase() === '#ffffff' || p1.toLowerCase() === 'white') return match;
+    return `fill="${color}"`;
+  });
+  cleaned = cleaned.replace(/stroke="([^"]+)"/gi, (match, p1) => {
+    if (p1.toLowerCase() === 'none') return match;
+    return `stroke="${color}"`;
+  });
+  cleaned = cleaned.replace(/filter="url\(#.*?\)"/gi, '');
+  return cleaned;
+};
 
 function NavItem({ active, svgRaw, label, onClick }) {
   const color = active ? ACCENT : MUTED;
   return (
-    <button type="button" onClick={onClick} className="flex flex-col items-center gap-0.5 pb-0.5">
+    <button
+      type="button"
+      onClick={onClick}
+      className={`appearance-none border-0 bg-transparent p-0 text-inherit outline-none relative flex flex-col items-center justify-center pt-2 transition-all ${
+        active ? 'opacity-100' : 'opacity-80'
+      }`}
+    >
       <span
-        className="flex h-11 w-11 items-center justify-center"
-        dangerouslySetInnerHTML={{ __html: tintSvg(svgRaw, color) }}
+        className="flex h-[26px] w-[26px] shrink-0 items-center justify-center bg-transparent [&>svg]:h-full [&>svg]:w-full"
+        dangerouslySetInnerHTML={{ __html: cleanSvgColors(svgRaw, color) }}
       />
-      <span className={`text-[10px] font-semibold ${active ? 'text-[#c1e14f]' : 'text-neutral-500'}`}>{label}</span>
+      <span
+        className={`mt-1 truncate text-center text-[11px] font-bold leading-none tracking-tight ${active ? 'text-[#96b232]' : 'text-[#7B7B7B]'}`}
+      >
+        {label}
+      </span>
     </button>
   );
 }
 
+/** Barra inferior estilo mock "Parte abajo": blanca con hendidura central y FAB con gradiente. */
 function BottomNav({ isScanning, onFileChange }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -36,56 +59,50 @@ function BottomNav({ isScanning, onFileChange }) {
   const isAlbum = path.startsWith('/album');
   const isProfile = path.startsWith('/profile');
 
-  const handleCameraClick = () => {
-    fileInputRef.current?.click();
-  };
-
   return (
-    <div className="relative mt-auto h-[118px] w-full shrink-0">
-      <div className="absolute bottom-0 h-[102px] w-full">
-        <svg
-          viewBox="0 0 400 92"
-          className="h-full w-full"
-          preserveAspectRatio="none"
-          style={{ filter: 'drop-shadow(0px -2px 5px rgba(0,0,0,0.08))' }}
-        >
-          <path
-            d="M 0 38 L 138 38 C 158 38 168 84 200 84 C 232 84 242 38 262 38 L 400 38 L 400 92 L 0 92 Z"
-            fill="#ffffff"
-            stroke="#e8e8e8"
-            strokeWidth="1"
-          />
-        </svg>
-      </div>
+    <div className="relative h-[var(--zoa-bottom-height)] w-full">
+      <img
+        src={bottomSvgUrl}
+        alt=""
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 block h-full w-full object-fill"
+      />
 
-      <div className="absolute bottom-2 flex w-full items-end justify-between px-5 pb-1">
-        <div className="flex w-[34%] justify-between gap-1 pr-1">
+      <div className="absolute inset-x-0 bottom-0 flex h-[calc(var(--zoa-bottom-height)-16px)] w-full items-end px-2 pb-1">
+        <div className="flex w-[40%] items-end justify-around pr-1">
           <NavItem active={isHome} svgRaw={homeSvg} label="Inicio" onClick={() => navigate('/')} />
           <NavItem active={isMap} svgRaw={mapaSvg} label="Mapa" onClick={() => navigate('/map')} />
         </div>
-        <div className="w-[76px]" aria-hidden />
-        <div className="flex w-[34%] justify-between gap-1 pl-1">
+        <div className="w-[20%]" />
+        <div className="flex w-[40%] items-end justify-around pl-1">
           <NavItem active={isAlbum} svgRaw={miZoologicoSvg} label="Mi Album" onClick={() => navigate('/album')} />
           <NavItem active={isProfile} svgRaw={perfilSvg} label="Perfil" onClick={() => navigate('/profile')} />
         </div>
       </div>
 
-      <div className="absolute bottom-[38%] left-1/2 z-20 -translate-x-1/2">
-        <input ref={fileInputRef} type="file" accept="image/*" capture="environment" onChange={onFileChange} className="hidden" />
+      <div className="absolute bottom-[22px] left-1/2 z-30 -translate-x-1/2 rounded-full bg-white p-1">
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          onChange={onFileChange}
+          className="hidden"
+        />
         <button
           type="button"
-          onClick={handleCameraClick}
+          onClick={() => fileInputRef.current?.click()}
           disabled={isScanning}
-          className="flex h-[80px] w-[80px] items-center justify-center rounded-full bg-[#c1e14f] shadow-[0_10px_22px_rgba(193,225,79,0.55)] outline-none ring-4 ring-white transition-transform active:scale-95 disabled:cursor-not-allowed"
+          className="flex h-[68px] w-[68px] items-center justify-center rounded-full border-0 bg-[#96b232] shadow-[0_8px_16px_rgba(0,0,0,0.3)] outline-none transition-transform active:scale-95 disabled:cursor-not-allowed"
           aria-label="Abrir cámara"
         >
           {isScanning ? (
-            <span className="h-9 w-9 animate-spin rounded-full border-[3px] border-white/70 border-t-transparent" />
+            <span className="h-8 w-8 animate-spin rounded-full border-[3px] border-white/70 border-t-transparent" />
           ) : (
             <span
-              className="h-9 w-[40px]"
+              className="flex h-9 w-9 items-center justify-center [&>svg]:h-full [&>svg]:w-full"
               aria-hidden
-              dangerouslySetInnerHTML={{ __html: tintSvg(camaraSvg, '#ffffff') }}
+              dangerouslySetInnerHTML={{ __html: cleanSvgColors(camaraSvg, '#ffffff') }}
             />
           )}
         </button>

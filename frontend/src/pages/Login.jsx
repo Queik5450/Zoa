@@ -23,21 +23,21 @@ function Login() {
   return (
     <div className="flex min-h-[100dvh] flex-col bg-white font-sans">
       <Header />
-      <div className="flex flex-1 flex-col px-5 pb-10 pt-6">
+      <div className="mx-auto flex w-full max-w-sm flex-1 flex-col px-10 pb-12 pt-16">
         <h1 className="text-center text-xl font-bold text-black">Iniciar Sesión</h1>
-        <p className="mt-2 text-center text-sm text-black">
+        <p className="mt-3 text-center text-sm text-black">
           ¿No tienes cuenta?{' '}
-          <Link to="/register" className="font-semibold text-[#80902e] underline">
+          <Link to="/register" className="font-semibold text-[#80902e] underline underline-offset-2">
             Regístrate
           </Link>
         </p>
 
         <form
           onSubmit={handleSubmit}
-          className="mt-8 space-y-5 rounded-3xl bg-[#80902e] p-6 shadow-[0_16px_40px_rgba(128,144,46,0.35)]"
+          className="mt-10 w-full space-y-5 rounded-[28px] bg-[#80902e] p-7 shadow-[0_18px_45px_rgba(128,144,46,0.38)]"
         >
           <div>
-            <label className="mb-1.5 block text-xs font-semibold text-white">Username o correo electrónico</label>
+            <label className="mb-2 block text-xs font-semibold text-white">Username o correo electrónico</label>
             <input
               value={username}
               onChange={(e) => setUsername(e.target.value)}
@@ -47,7 +47,7 @@ function Login() {
             />
           </div>
           <div>
-            <label className="mb-1.5 block text-xs font-semibold text-white">Contraseña</label>
+            <label className="mb-2 block text-xs font-semibold text-white">Contraseña</label>
             <input
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -59,7 +59,7 @@ function Login() {
           </div>
           <button
             type="submit"
-            className="mt-2 h-12 w-full rounded-2xl bg-[#c1e14f] text-sm font-bold text-black shadow-[0_8px_20px_rgba(0,0,0,0.12)]"
+            className="mt-2 h-12 w-full rounded-2xl bg-[#c1e14f] text-sm font-bold text-black shadow-[0_8px_22px_rgba(0,0,0,0.14)]"
           >
             Iniciar Sesión
           </button>

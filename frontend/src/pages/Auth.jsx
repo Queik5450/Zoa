@@ -40,9 +40,9 @@ function AuthPage() {
   };
 
   return (
-    <div className="flex min-h-[100dvh] flex-col bg-white font-sans">
+    <div className="flex min-h-[100dvh] flex-col bg-[#eef3f8] font-sans">
       <Header />
-      <div className="flex flex-1 flex-col px-4 py-5">
+      <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-4 py-5">
         <button
           type="button"
           onClick={() => navigate('/', { replace: true })}
@@ -57,26 +57,30 @@ function AuthPage() {
           Inicia sesión o crea tu cuenta para continuar con el análisis de la foto.
         </p>
 
-        <div className="mx-auto mt-5 grid w-full max-w-md grid-cols-2 rounded-full border border-neutral-200 bg-neutral-100 p-1 text-sm font-semibold">
+        <div className="mx-auto mt-5 grid w-full max-w-xs grid-cols-2 gap-3">
           <button
             type="button"
             onClick={() => setMode('login')}
-            className={mode === 'login' ? 'rounded-full bg-white py-2 text-black shadow-sm' : 'py-2 text-neutral-500'}
+            className={`rounded-xl border-2 border-black/25 bg-white py-3 text-center text-sm font-black shadow-sm ${
+              mode === 'login' ? 'ring-2 ring-[#80902e] ring-offset-2' : ''
+            }`}
           >
             Iniciar sesión
           </button>
           <button
             type="button"
             onClick={() => setMode('register')}
-            className={mode === 'register' ? 'rounded-full bg-white py-2 text-black shadow-sm' : 'py-2 text-neutral-500'}
+            className={`rounded-xl border-2 border-black/25 bg-white py-3 text-center text-sm font-black shadow-sm ${
+              mode === 'register' ? 'ring-2 ring-[#80902e] ring-offset-2' : ''
+            }`}
           >
-            Registrarme
+            Registrarse
           </button>
         </div>
 
         <form
           onSubmit={handleSubmit}
-          className="mx-auto mt-6 w-full max-w-md space-y-4 rounded-3xl bg-[#80902e] p-6 shadow-[0_16px_40px_rgba(128,144,46,0.35)]"
+          className="mx-auto mt-6 w-full space-y-4 rounded-3xl border-2 border-black/10 bg-[#80902e] p-6 shadow-[0_16px_40px_rgba(128,144,46,0.35)]"
         >
           <div>
             <label className="mb-1.5 block text-xs font-semibold text-white">Nombre</label>

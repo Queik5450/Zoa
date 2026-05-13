@@ -2,10 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
-html, body {
+html,
+body,
+#root {
   margin: 0;
   padding: 0;
-  height: 100%;
+  min-height: 100dvh;
+  width: 100%;
+  display: flex; /* Fuerza a root a expandirse */
+  flex-direction: column;
+  background-color: #eef3f8;
 }
 
 .custom-scrollbar::-webkit-scrollbar {

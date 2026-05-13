@@ -86,9 +86,9 @@ function DiscoverCarouselSlide({ card, isScanning }) {
   };
 
   return (
-    <main className="relative z-0 flex w-full max-w-[280px] flex-1 flex-col items-center justify-center">
+    <main className="relative z-0 mx-auto flex h-full min-h-0 w-full max-w-[280px] shrink-0 flex-col items-stretch justify-center">
       <div
-        className="relative mx-auto w-full max-w-[260px] cursor-pointer"
+        className="relative flex h-full min-h-0 w-full cursor-pointer"
         onClick={handleToggleFlip}
         style={{ perspective: '1000px' }}
         role="button"
