@@ -75,7 +75,7 @@ function DiscoverCarouselSlide({ card, isScanning }) {
   };
 
   return (
-    <main className="relative z-0 mx-auto flex h-full min-h-0 w-full max-w-[280px] shrink-0 flex-col items-stretch justify-center">
+    <main className="relative z-0 mx-auto flex h-full min-h-0 w-full shrink-0 flex-col items-stretch justify-center">
       <div
         className="relative flex h-full min-h-0 w-full flex-col cursor-pointer"
         onClick={handleToggleFlip}
@@ -111,7 +111,7 @@ function DiscoverCarouselSlide({ card, isScanning }) {
             <div className="flex h-full flex-col">
               <div className="relative flex-[5] overflow-hidden bg-neutral-200">
                 <img src={card.image} alt={card.name} className="h-full w-full object-cover object-center" />
-                <p className="pointer-events-none absolute left-3 top-3 max-w-[85%] text-[11px] font-bold text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.85)]">
+                <p className="pointer-events-none absolute left-3 top-3 max-w-[85%] truncate text-[11px] font-bold text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.85)]">
                   Foto tomada por: {authorName.replace(/^@/, '')}
                 </p>
                 {isScanning ? (
@@ -122,7 +122,7 @@ function DiscoverCarouselSlide({ card, isScanning }) {
                 ) : null}
               </div>
 
-              <div className="flex flex-1 flex-col justify-center bg-white px-4 pb-3 pt-2">
+              <div className="flex h-[34%] min-h-[112px] flex-col justify-center bg-white px-4 pb-3 pt-2">
                 <div className="min-w-0">
                   <span className="block truncate text-[22px] font-black leading-tight text-black">{card.name}</span>
                 </div>

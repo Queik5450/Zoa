@@ -64,7 +64,14 @@ function Home() {
   }, [n]);
 
   const featuredCard = cards[activeIndex] || cards[0] || null;
-  const backdropCards = useMemo(() => cards.slice(1, 3), [cards]);
+  const prevCard = useMemo(() => {
+    if (n < 2) return null;
+    return cards[(activeIndex - 1 + n) % n];
+  }, [activeIndex, cards, n]);
+  const nextCard = useMemo(() => {
+    if (n < 2) return null;
+    return cards[(activeIndex + 1) % n];
+  }, [activeIndex, cards, n]);
 
   const onTouchStart = (e) => {
     const t = e.touches[0];
@@ -94,22 +101,43 @@ function Home() {
         onTouchEnd={onTouchEnd}
       >
         <div className="relative flex w-full max-w-[min(100%,330px)] items-end justify-center" style={{ aspectRatio: '292 / 560' }}>
-          {backdropCards.map((card, index) => (
+          {prevCard ? (
             <div
-              key={card.id}
-              className="absolute bottom-0 left-1/2 h-[94%] w-full -translate-x-1/2 overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_20px_44px_rgba(0,0,0,0.18)]"
+              className="absolute left-1/2 top-0 h-full w-full overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_20px_44px_rgba(0,0,0,0.18)]"
               style={{
-                transform: `translateX(-50%) translate(${(index + 1) * 10}px, ${(index + 1) * 12}px) scale(${1 - (index + 1) * 0.06})`,
-                opacity: 1 - (index + 1) * 0.14,
-                zIndex: 10 - index,
+                transform: 'translateX(calc(-50% - 56px)) translateY(18px)',
+                opacity: 0.92,
+                zIndex: 10,
               }}
             >
-              <img src={card.image} alt="" className="absolute inset-0 h-full w-full object-cover" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
+              <img src={prevCard.image} alt={prevCard.name} className="absolute inset-0 h-full w-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-black/10 to-transparent" />
+              <div className="absolute inset-x-0 top-0 flex items-start justify-between p-2 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.65)]">
+                <span className="max-w-[72%] truncate text-[11px] font-medium leading-none">{prevCard.name}</span>
+                <span className="text-[11px] font-medium leading-none">{prevCard.badge}</span>
+              </div>
             </div>
-          ))}
+          ) : null}
 
-          <div className="relative z-20 h-full w-full">
+          {nextCard ? (
+            <div
+              className="absolute left-1/2 top-0 h-full w-full overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_20px_44px_rgba(0,0,0,0.18)]"
+              style={{
+                transform: 'translateX(calc(-50% + 56px)) translateY(18px)',
+                opacity: 0.92,
+                zIndex: 10,
+              }}
+            >
+              <img src={nextCard.image} alt={nextCard.name} className="absolute inset-0 h-full w-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-black/10 to-transparent" />
+              <div className="absolute inset-x-0 top-0 flex items-start justify-between p-2 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.65)]">
+                <span className="max-w-[72%] truncate text-[11px] font-medium leading-none">{nextCard.name}</span>
+                <span className="text-[11px] font-medium leading-none">{nextCard.badge}</span>
+              </div>
+            </div>
+          ) : null}
+
+          <div className="relative z-20 flex h-full w-full items-end justify-center">
             {featuredCard ? (
               <DiscoverCarouselSlide card={featuredCard} isScanning={isScanning} />
             ) : (
