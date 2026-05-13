@@ -96,12 +96,23 @@ export async function publishPendingPublicationDraft(draft = null) {
     headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
     body: formData,
   });
+  let published;
+  try {
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(text || 'No se pudo publicar la observación.');
+    }
 
-  if (!response.ok) {
-    throw new Error('No se pudo publicar la observación.');
+    const text = await response.text();
+    try {
+      published = text ? JSON.parse(text) : null;
+    } catch {
+      // if response is not JSON, keep raw text
+      published = text;
+    }
+  } catch (err) {
+    throw new Error(err?.message || 'No se pudo publicar la observación.');
   }
-
-  const published = await response.json();
   clearPendingPublicationDraft();
   return published;
 }
