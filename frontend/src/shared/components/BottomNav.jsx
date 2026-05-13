@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import camaraSvg from '../assets/icons/camara.svg?raw';
 import homeSvg from '../assets/icons/home.svg?raw';
@@ -47,10 +47,9 @@ function NavItem({ active, svgRaw, label, onClick }) {
 }
 
 /** Barra inferior estilo mock "Parte abajo": blanca con hendidura central y FAB con gradiente. */
-function BottomNav({ isScanning, onFileChange }) {
+function BottomNav() {
   const navigate = useNavigate();
   const location = useLocation();
-  const fileInputRef = useRef(null);
   const path = location.pathname;
 
   const isHome = path === '/' || path === '';
@@ -84,30 +83,17 @@ function BottomNav({ isScanning, onFileChange }) {
       </div>
 
       <div className="absolute bottom-[22px] left-1/2 z-30 -translate-x-1/2 rounded-full bg-white p-1">
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          capture="environment"
-          onChange={onFileChange}
-          className="hidden"
-        />
         <button
           type="button"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={isScanning}
-          className="flex h-[68px] w-[68px] items-center justify-center rounded-full border-0 bg-[#96b232] shadow-[0_8px_16px_rgba(0,0,0,0.3)] outline-none transition-transform active:scale-95 disabled:cursor-not-allowed"
-          aria-label="Abrir cámara"
+          onClick={() => navigate('/publicacion')}
+          className="flex h-[68px] w-[68px] items-center justify-center rounded-full border-0 bg-[#96b232] shadow-[0_8px_16px_rgba(0,0,0,0.3)] outline-none transition-transform active:scale-95"
+          aria-label="Abrir página de publicación"
         >
-          {isScanning ? (
-            <span className="h-8 w-8 animate-spin rounded-full border-[3px] border-white/70 border-t-transparent" />
-          ) : (
-            <span
-              className="flex h-9 w-9 items-center justify-center [&>svg]:h-full [&>svg]:w-full"
-              aria-hidden
-              dangerouslySetInnerHTML={{ __html: cleanSvgColors(camaraSvg, '#ffffff') }}
-            />
-          )}
+          <span
+            className="flex h-9 w-9 items-center justify-center [&>svg]:h-full [&>svg]:w-full"
+            aria-hidden
+            dangerouslySetInnerHTML={{ __html: cleanSvgColors(camaraSvg, '#ffffff') }}
+          />
         </button>
       </div>
     </div>
