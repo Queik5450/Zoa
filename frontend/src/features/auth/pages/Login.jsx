@@ -36,6 +36,11 @@ function Login() {
       return;
     }
 
+    if (!username.trim() || !password) {
+      setSubmitError('Por favor ingresa usuario y contraseña.');
+      return;
+    }
+
     setIsSubmitting(true);
     setSubmitError('');
 
