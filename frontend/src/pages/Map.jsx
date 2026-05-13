@@ -1,7 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ChevronDown, Search, X } from 'lucide-react';
-import { getPublishedCards } from '../utils/scanFlow';
-import { MOCK_MAP_CHIPS } from '../data/zoaMocks';
 import { apiJson } from '../utils/api';
 import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet';
 import L from 'leaflet';
@@ -36,7 +34,6 @@ function Map() {
   const [searchActive, setSearchActive] = useState(false);
   const [publications, setPublications] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const fallbackPublications = useMemo(() => getPublishedCards().filter((card) => card.latitude && card.longitude), []);
 
   useEffect(() => {
     let isActive = true;
@@ -45,10 +42,10 @@ function Map() {
       try {
         const response = await apiJson('/map/publications?limit=100');
         if (!isActive) return;
-        setPublications(Array.isArray(response) && response.length > 0 ? response : fallbackPublications);
+        setPublications(Array.isArray(response) ? response : []);
       } catch {
         if (!isActive) return;
-        setPublications(fallbackPublications);
+        setPublications([]);
       } finally {
         if (isActive) {
           setIsLoading(false);
@@ -61,7 +58,7 @@ function Map() {
     return () => {
       isActive = false;
     };
-  }, [fallbackPublications]);
+  }, []);
 
   const filteredPublications = useMemo(() => {
     const term = query.trim().toLowerCase();
@@ -143,17 +140,6 @@ function Map() {
                 <X className="h-5 w-5" />
               </button>
             ) : null}
-          </div>
-          <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {MOCK_MAP_CHIPS.map((label, i) => (
-              <button
-                key={`${label}-${i}`}
-                type="button"
-                className="shrink-0 rounded-full border border-neutral-200 bg-white px-3 py-1.5 text-xs font-semibold text-black shadow-sm"
-              >
-                {label}
-              </button>
-            ))}
           </div>
         </form>
 

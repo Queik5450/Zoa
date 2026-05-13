@@ -1,7 +1,3 @@
-/** Datos de ejemplo alineados con los mockups ZOA (contenido placeholder). */
-
-export const MOCK_MAP_CHIPS = ['Especie', 'Especie', 'Especie', 'Especie'];
-
 export const MOCK_ALBUM_ANIMALS = [
   {
     id: 'a1',
