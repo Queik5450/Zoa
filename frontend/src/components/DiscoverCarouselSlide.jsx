@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Heart, Loader2, MapPin, MessageSquare, Send, X } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -37,17 +37,6 @@ function DiscoverCarouselSlide({ card, isScanning }) {
     { id: 1, author: 'wild.focus', text: 'La foto quedó muy limpia, buen encuadre.' },
     { id: 2, author: 'zoa.team', text: 'Parece una captura perfecta para identificar la especie.' },
   ]);
-
-  useEffect(() => {
-    setIsFlipped(false);
-    setIsLiked(false);
-    setShowComments(false);
-    setCommentDraft('');
-    setCommentItems([
-      { id: 1, author: 'wild.focus', text: 'La foto quedó muy limpia, buen encuadre.' },
-      { id: 2, author: 'zoa.team', text: 'Parece una captura perfecta para identificar la especie.' },
-    ]);
-  }, [card.id]);
 
   const displayedComments = useMemo(() => {
     const numericComments = Number(String(baseComments).replace(/[^0-9.]/g, ''));

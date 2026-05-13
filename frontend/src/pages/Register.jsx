@@ -2,23 +2,70 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import { setMockAuth } from '../utils/scanFlow';
+import { apiJson } from '../utils/api';
+import { supabase } from '../utils/supabaseClient';
 
 function Register() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [submitError, setSubmitError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const displayName = (username || email.split('@')[0] || 'usuario').trim();
-    setMockAuth({
-      mode: 'register',
-      displayName,
-      email,
-      authenticatedAt: Date.now(),
-    });
-    navigate('/');
+    const normalizedEmail = email.trim();
+    const displayName = (username || normalizedEmail.split('@')[0] || 'usuario').trim();
+
+    setIsSubmitting(true);
+    setSubmitError('');
+
+    try {
+      const authResult = await supabase.auth.signUp({
+        email: normalizedEmail,
+        password,
+        options: {
+          data: {
+            full_name: displayName,
+            username: displayName,
+          },
+        },
+      });
+
+      if (authResult.error) {
+        throw authResult.error;
+      }
+
+      const user = authResult.data?.user;
+      if (!user) {
+        throw new Error('No se pudo crear usuario.');
+      }
+
+      setMockAuth({
+        mode: 'register',
+        displayName: user.user_metadata?.full_name || displayName,
+        email: user.email || normalizedEmail,
+        userId: user.id,
+        authenticatedAt: Date.now(),
+      });
+
+      await apiJson('/profiles/sync', {
+        method: 'POST',
+        body: {
+          user_id: user.id,
+          email: user.email || normalizedEmail,
+          display_name: user.user_metadata?.full_name || displayName,
+          avatar_url: user.user_metadata?.avatar_url || null,
+        },
+      });
+
+      navigate('/');
+    } catch (error) {
+      setSubmitError(error?.message || 'No se pudo registrar.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -78,10 +125,12 @@ function Register() {
           </div>
           <button
             type="submit"
+            disabled={isSubmitting}
             className="mt-2 h-12 w-full rounded-2xl bg-[#c1e14f] text-sm font-bold text-black shadow-[0_8px_22px_rgba(0,0,0,0.14)]"
           >
-            Registrarse
+            {isSubmitting ? 'Registrando...' : 'Registrarse'}
           </button>
+          {submitError ? <p className="text-sm font-medium text-red-100">{submitError}</p> : null}
         </form>
       </div>
     </div>

@@ -1,8 +1,8 @@
-import React, { useCallback, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import DiscoverCarouselSlide from '../components/DiscoverCarouselSlide';
-import { getMockAuth, getPublishedCards } from '../utils/scanFlow';
+import { getPublishedCards } from '../utils/scanFlow';
 import { MOCK_HOME_CARD_EXTRA } from '../data/zoaMocks';
+import { apiJson, mergeCards } from '../utils/api';
 
 const MOCK_FALLBACK = [
   {
@@ -28,17 +28,28 @@ function Home() {
   const touchRef = useRef({ x: 0, y: 0 });
   const [activeIndex, setActiveIndex] = useState(0);
   const [isScanning] = useState(false);
-  const auth = getMockAuth();
-  const [cards] = useState(() => {
-    const published = getPublishedCards();
-    const merged = [...published, ...MOCK_FALLBACK];
-    const seen = new Set();
-    return merged.filter((c) => {
-      if (seen.has(c.id)) return false;
-      seen.add(c.id);
-      return true;
-    });
-  });
+  const [cards, setCards] = useState(() => mergeCards(getPublishedCards(), MOCK_FALLBACK));
+
+  useEffect(() => {
+    let isActive = true;
+
+    async function loadFeed() {
+      try {
+        const feed = await apiJson('/publications/feed?limit=50');
+        if (!isActive || !Array.isArray(feed)) return;
+        setCards(mergeCards(feed, [...getPublishedCards(), ...MOCK_FALLBACK]));
+      } catch {
+        if (!isActive) return;
+        setCards(mergeCards(getPublishedCards(), MOCK_FALLBACK));
+      }
+    }
+
+    loadFeed();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   const n = cards.length;
 
