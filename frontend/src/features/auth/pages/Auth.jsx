@@ -5,6 +5,7 @@ import Header from '../../../shared/components/Header';
 import { getMockAuth, getPendingScan, setMockAuth } from '../../../shared/lib/scanFlow';
 import { hydrateMockAuthFromSession, signInWithGoogle } from '../../../shared/lib/auth';
 import { supabase } from '../../../shared/lib/supabaseClient';
+import { apiJson } from '../../../shared/lib/api';
 
 function AuthPage() {
   const navigate = useNavigate();
