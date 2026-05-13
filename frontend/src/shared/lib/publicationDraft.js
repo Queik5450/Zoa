@@ -74,6 +74,9 @@ export async function publishPendingPublicationDraft(draft = null) {
   const imageFile = dataUrlToFile(imageDataUrl, currentDraft.fileName || 'scan.jpg');
   const formData = new FormData();
   formData.append('file', imageFile);
+  // Idempotency: send client-generated publication id so backend can dedupe
+  const clientPubId = currentDraft.id || (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `client-${Date.now()}-${Math.random().toString(36).slice(2,8)}`);
+  formData.append('publication_id', clientPubId);
   formData.append('user_id', authSession.userId || authSession.id || authSession.email || 'anonymous');
   formData.append('user_email', authSession.email || '');
   formData.append('display_name', authSession.displayName || currentDraft.authorName?.replace(/^@/, '') || 'usuario');
@@ -91,11 +94,26 @@ export async function publishPendingPublicationDraft(draft = null) {
   const sessionResult = await supabase.auth.getSession();
   const accessToken = sessionResult.data?.session?.access_token;
 
-  const response = await fetch(apiUrl('/publications'), {
-    method: 'POST',
-    headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
-    body: formData,
-  });
+  // Try fetch, retry once on network failure
+  let response;
+  try {
+    response = await fetch(apiUrl('/publications'), {
+      method: 'POST',
+      headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
+      body: formData,
+    });
+  } catch (networkErr) {
+    // transient network error, retry once
+    try {
+      response = await fetch(apiUrl('/publications'), {
+        method: 'POST',
+        headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
+        body: formData,
+      });
+    } catch (secondErr) {
+      throw new Error(secondErr?.message || 'Network error during publication.');
+    }
+  }
   let published;
   try {
     if (!response.ok) {

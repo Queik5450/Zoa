@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
-from fastapi import APIRouter, File, Form, UploadFile
+from fastapi import APIRouter, File, Form, UploadFile, HTTPException
 from pydantic import BaseModel
 
 from app.ai_services.vision import analyze_image_with_ai
@@ -195,6 +195,7 @@ def sync_profile(payload: ProfileSyncRequest):
 @router.post("/publications")
 async def create_publication(
     file: UploadFile = File(...),
+    publication_id: Optional[str] = Form(None),
     user_id: str = Form(...),
     user_email: Optional[str] = Form(None),
     display_name: Optional[str] = Form(None),
@@ -209,19 +210,41 @@ async def create_publication(
     longitude: Optional[float] = Form(None),
     is_public: bool = Form(True),
 ):
-    publication_id = str(uuid4())
+    # Use provided id from client for idempotency if present
+    publication_id = (publication_id or str(uuid4()))
+
+    # If client provided publication_id, check existing record to avoid duplicates
+    if publication_id:
+        try:
+            existing = _safe_query(supabase.table(PUBLICATION_TABLE).select("*").eq("id", publication_id).limit(1))
+            if existing and existing.data:
+                # return existing shaped publication
+                row = existing.data[0]
+                return _shape_publication(row)
+        except Exception as exc:
+            print(f"Failed checking existing publication for id {publication_id}: {exc}")
     file_bytes = await file.read()
     file_extension = os.path.splitext(file.filename or "")[1] or ".jpg"
     storage_path = f"publications/{user_id}/{publication_id}{file_extension}"
 
     try:
-        supabase.storage.from_(MEDIA_BUCKET).upload(storage_path, file_bytes)
-        public_url = supabase.storage.from_(MEDIA_BUCKET).get_public_url(storage_path)
+        upload_result = supabase.storage.from_(MEDIA_BUCKET).upload(storage_path, file_bytes)
+        # attempt to obtain public url; some clients return dict, some throw
+        try:
+            public_url = supabase.storage.from_(MEDIA_BUCKET).get_public_url(storage_path)
+        except Exception:
+            public_url = ''
     except Exception as exc:
         print(f"Storage upload failed: {exc}")
-        public_url = ""
+        # surface error to client
+        raise HTTPException(status_code=500, detail=f"Storage upload failed: {exc}")
 
-    _sync_profile(user_id, user_email, display_name)
+    profile_res = None
+    try:
+        profile_res = _sync_profile(user_id, user_email, display_name)
+    except Exception as exc:
+        print(f"Profile sync failed: {exc}")
+        # do not block publication for profile sync, but log
     species_id = _get_or_create_species_id(
         {
             "common_name": common_name,
@@ -255,7 +278,9 @@ async def create_publication(
         "created_at": _now_iso(),
     }
 
-    _safe_query(supabase.table(PUBLICATION_TABLE).insert(publication_payload))
+    insert_result = _safe_query(supabase.table(PUBLICATION_TABLE).insert(publication_payload))
+    if not insert_result:
+        raise HTTPException(status_code=500, detail="Failed to insert publication into database.")
 
     return {
         "id": publication_id,
