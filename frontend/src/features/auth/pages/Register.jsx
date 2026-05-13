@@ -154,7 +154,7 @@ function Register() {
               {isSubmitting ? 'Registrando...' : 'Registrarse'}
             </button>
 
-            {submitError ? <p className="text-sm font-medium text-red-100">{submitError}</p> : null}
+            {submitError ? <p className="text-sm font-medium text-red-600">{submitError}</p> : null}
           </div>
         </form>
       </div>

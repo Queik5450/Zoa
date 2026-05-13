@@ -225,7 +225,7 @@ function AuthPage() {
             {isSubmitting ? 'Procesando...' : mode === 'login' ? 'Entrar y analizar' : 'Crear cuenta y analizar'}
           </button>
 
-          {submitError ? <p className="text-sm font-medium text-red-100">{submitError}</p> : null}
+          {submitError ? <p className="text-sm font-medium text-red-600">{submitError}</p> : null}
         </form>
       </div>
     </div>
