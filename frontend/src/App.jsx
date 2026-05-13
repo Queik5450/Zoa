@@ -1,18 +1,18 @@
 ﻿import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import MobileShell from './layouts/MobileShell';
-import Home from './pages/Home';
-import AuthPage from './pages/Auth';
-import AnalysisPage from './pages/Analysis';
-import MenuPage from './pages/Menu';
-import Profile from './pages/Profile';
-import Map from './pages/Map';
-import Album from './pages/Album';
-import AlbumImageDetail from './pages/AlbumImageDetail';
-import AlbumAudioDetail from './pages/AlbumAudioDetail';
-import AlbumSpeciesDetail from './pages/AlbumSpeciesDetail';
-import Login from './pages/Login';
-import Register from './pages/Register';
+import MobileShell from './shared/layouts/MobileShell';
+import Home from './features/home/pages/Home';
+import AuthPage from './features/auth/pages/Auth';
+import AnalysisPage from './features/analysis/pages/Analysis';
+import MenuPage from './features/menu/pages/Menu';
+import Profile from './features/profile/pages/Profile';
+import Map from './features/map/pages/Map';
+import Album from './features/album/pages/Album';
+import AlbumImageDetail from './features/album/pages/AlbumImageDetail';
+import AlbumAudioDetail from './features/album/pages/AlbumAudioDetail';
+import AlbumSpeciesDetail from './features/album/pages/AlbumSpeciesDetail';
+import Login from './features/auth/pages/Login';
+import Register from './features/auth/pages/Register';
 
 function App() {
   return (
