@@ -11,6 +11,8 @@ function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [submitError, setSubmitError] = useState('');
+  const [usernameError, setUsernameError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [rateLimitRemainingMs, setRateLimitRemainingMs] = useState(() => getAuthCooldownRemainingMs());
 
@@ -26,8 +28,20 @@ function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const emailValue = username.includes('@') ? username.trim() : `${username.trim()}@zoa.local`;
     const displayName = (username || 'usuario').trim();
+
+    const buildLoginEmail = (raw) => {
+      const trimmed = (raw || '').trim();
+      if (!trimmed) return '';
+      if (trimmed.includes('@')) return trimmed.toLowerCase();
+
+      // Normalize and remove diacritics, replace spaces with dots, strip invalid chars
+      const normalized = trimmed.normalize('NFKD').replace(/([\u0300-\u036f])/g, '');
+      const slug = normalized.replace(/\s+/g, '.').replace(/[^A-Za-z0-9._-]/g, '').toLowerCase();
+      return slug ? `${slug}@zoa.local` : '';
+    };
+
+    const emailValue = buildLoginEmail(username);
     const cooldownRemaining = getAuthCooldownRemainingMs();
 
     if (cooldownRemaining > 0) {
@@ -36,8 +50,25 @@ function Login() {
       return;
     }
 
+    // Clear previous field errors
+    setUsernameError('');
+    setPasswordError('');
+
     if (!username.trim() || !password) {
       setSubmitError('Por favor ingresa usuario y contraseña.');
+      return;
+    }
+
+    // Password length validation
+    if (password.length < 8) {
+      setPasswordError('La contraseña debe tener al menos 8 caracteres.');
+      return;
+    }
+
+    // Validate generated email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailValue || !emailRegex.test(emailValue)) {
+      setSubmitError('Nombre de usuario o correo inválido. Usa un correo válido o un username sin caracteres especiales.');
       return;
     }
 
@@ -130,23 +161,41 @@ function Login() {
               <label className="text-left text-[14px] sm:text-[15px]">Username o correo electronico</label>
               <input
                 value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                onChange={(e) => {
+                  setUsername(e.target.value);
+                  if (usernameError) setUsernameError('');
+                  if (submitError) setSubmitError('');
+                }}
                 className="h-11 w-full rounded-lg bg-white pl-3 text-black shadow-[0px_4px_4px_rgba(0,_0,_0,_0.25)] outline-none sm:h-[33px]"
                 placeholder="Username o correo electronico"
                 autoComplete="username"
               />
+              {usernameError ? (
+                <p className="text-sm font-medium text-red-600">{usernameError}</p>
+              ) : (
+                <p className="text-xs text-white/90">Puedes usar correo o username. Los espacios se convertirán en puntos y se eliminarán caracteres especiales. Ej: José Pereira → jose.pereira@zoa.local</p>
+              )}
             </div>
 
             <div className="flex flex-col gap-[5px]">
               <label className="text-left text-[14px] sm:text-[15px]">Contraseña</label>
               <input
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (passwordError) setPasswordError('');
+                  if (submitError) setSubmitError('');
+                }}
                 type="password"
                 required
                 className="h-11 w-full rounded-lg bg-white pl-3 text-black shadow-[0px_4px_4px_rgba(0,_0,_0,_0.25)] outline-none sm:h-[33px]"
                 autoComplete="current-password"
               />
+              {passwordError ? (
+                <p className="text-sm font-medium text-red-600">{passwordError}</p>
+              ) : (
+                <p className="text-xs text-white/90">Mínimo 8 caracteres. Usa una contraseña segura.</p>
+              )}
             </div>
 
             <button
