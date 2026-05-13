@@ -15,6 +15,7 @@ function AuthPage() {
   const [password, setPassword] = useState('');
   const [submitError, setSubmitError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRateLimited, setIsRateLimited] = useState(false);
 
   const pendingScan = useMemo(() => getPendingScan(), []);
 
@@ -111,7 +112,14 @@ function AuthPage() {
 
       navigate('/analysis', { replace: true });
     } catch (error) {
-      setSubmitError(error?.message || 'No se pudo autenticar.');
+      const is429 = error?.status === 429 || (error?.message && /429|Too Many Requests/i.test(error.message));
+      if (is429) {
+        setIsRateLimited(true);
+        setSubmitError('Demasiadas solicitudes. Intenta de nuevo en unos minutos.');
+        setTimeout(() => setIsRateLimited(false), 30000);
+      } else {
+        setSubmitError(error?.message || 'No se pudo autenticar.');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -218,7 +226,7 @@ function AuthPage() {
 
           <button
             type="submit"
-            disabled={isSubmitting}
+            disabled={isSubmitting || isRateLimited}
             className="mt-2 inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[#c1e14f] px-4 text-sm font-bold text-black shadow-[0_8px_20px_rgba(0,0,0,0.12)] transition-transform active:scale-[0.98]"
           >
             {mode === 'login' ? <LogIn size={16} /> : <UserPlus size={16} />}

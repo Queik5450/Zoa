@@ -11,6 +11,7 @@ function Login() {
   const [password, setPassword] = useState('');
   const [submitError, setSubmitError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRateLimited, setIsRateLimited] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -47,7 +48,14 @@ function Login() {
 
       navigate('/');
     } catch (error) {
-      setSubmitError(error?.message || 'No se pudo iniciar sesión.');
+      const is429 = error?.status === 429 || (error?.message && /429|Too Many Requests/i.test(error.message));
+      if (is429) {
+        setIsRateLimited(true);
+        setSubmitError('Demasiadas solicitudes. Intenta de nuevo en unos minutos.');
+        setTimeout(() => setIsRateLimited(false), 30000);
+      } else {
+        setSubmitError(error?.message || 'No se pudo iniciar sesión.');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -119,7 +127,7 @@ function Login() {
 
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isRateLimited}
               className="mt-1 rounded-lg bg-[#c1e734] py-2 text-center text-[14px] font-semibold text-[#1e1e1e] shadow-[0px_4px_4px_rgba(0,_0,_0,_0.25)] disabled:opacity-70 sm:text-[15px]"
             >
               {isSubmitting ? 'Ingresando...' : 'Iniciar Sesión'}

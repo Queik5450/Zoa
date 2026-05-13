@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Header from '../../../shared/components/Header';
 import { hydrateMockAuthFromSession, signInWithGoogle } from '../../../shared/lib/auth';
@@ -12,6 +12,7 @@ function Register() {
   const [password, setPassword] = useState('');
   const [submitError, setSubmitError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRateLimited, setIsRateLimited] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -54,7 +55,15 @@ function Register() {
 
       navigate('/');
     } catch (error) {
-      setSubmitError(error?.message || 'No se pudo registrar.');
+      const is429 = error?.status === 429 || (error?.message && /429|Too Many Requests/i.test(error.message));
+      if (is429) {
+        setIsRateLimited(true);
+        setSubmitError('Demasiadas solicitudes. Intenta de nuevo en unos minutos.');
+        // auto-clear rate limit after 30s
+        setTimeout(() => setIsRateLimited(false), 30000);
+      } else {
+        setSubmitError(error?.message || 'No se pudo registrar.');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -148,7 +157,7 @@ function Register() {
 
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isRateLimited}
               className="mt-1 rounded-lg bg-[#c1e734] py-2 text-center text-[14px] font-semibold text-[#1e1e1e] shadow-[0px_4px_4px_rgba(0,_0,_0,_0.25)] disabled:opacity-70 sm:text-[15px]"
             >
               {isSubmitting ? 'Registrando...' : 'Registrarse'}
