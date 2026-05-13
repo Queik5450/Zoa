@@ -190,7 +190,7 @@ function AnalysisPage() {
 
   return (
     <div className="flex min-h-[100dvh] items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(193,225,79,0.2),_transparent_42%),linear-gradient(180deg,_#f6f7f1_0%,_#eef2e8_100%)] px-4 py-6">
-      <div className="w-full max-w-md rounded-[32px] border border-black/5 bg-white/95 p-5 shadow-[0_24px_70px_rgba(0,0,0,0.12)] backdrop-blur">
+      <div className="w-full max-w-md mx-auto rounded-[32px] border border-black/5 bg-white/95 p-5 shadow-[0_24px_70px_rgba(0,0,0,0.12)] backdrop-blur">
         <div className="mb-5 flex items-center justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#80902e]">Análisis IA</p>
@@ -205,12 +205,23 @@ function AnalysisPage() {
           </button>
         </div>
 
-        <div className="mb-5 overflow-hidden rounded-[26px] bg-neutral-100">
-          <img
-            src={pendingScan?.dataUrl}
-            alt={pendingScan?.name || 'Imagen seleccionada'}
-            className="h-64 w-full object-cover"
-          />
+        <div className="mb-5 relative flex items-center justify-center">
+          <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-[32px]">
+            <img
+              src={pendingScan?.dataUrl}
+              alt=""
+              className="h-full w-full object-cover opacity-20 blur-xl"
+            />
+            <div className="absolute inset-0 bg-black/10" />
+          </div>
+
+          <div className="relative w-full max-w-[360px] overflow-hidden rounded-[26px] bg-neutral-100 shadow-[0_12px_30px_rgba(0,0,0,0.08)] mx-auto">
+            <img
+              src={pendingScan?.dataUrl}
+              alt={pendingScan?.name || 'Imagen seleccionada'}
+              className="h-64 w-full object-cover"
+            />
+          </div>
         </div>
 
         {analysisState === 'loading' ? (
@@ -238,7 +249,7 @@ function AnalysisPage() {
         ) : null}
 
         {analysisState === 'ready' && analysisData ? (
-          <div className="space-y-4 rounded-[24px] border border-black/5 bg-[#f8faf4] p-5">
+          <div className="mx-auto w-full max-w-[28rem] space-y-4 rounded-[24px] border border-black/5 bg-[#f8faf4] p-5">
             <div className="flex items-start gap-3">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#c1e14f] text-white">
                 <CheckCircle2 size={22} />

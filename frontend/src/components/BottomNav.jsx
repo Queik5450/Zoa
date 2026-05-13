@@ -1,10 +1,11 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import camaraSvg from './icons/camara.svg?raw';
 import homeSvg from './icons/home.svg?raw';
 import perfilSvg from './icons/perfil.svg?raw';
 import mapaSvg from './icons/mapa.svg?raw';
 import miZoologicoSvg from './icons/Book.svg?raw';
+import { fileToDataUrl, savePendingScan } from '../shared/lib/scanFlow';
 
 const ACCENT = '#96b232'; // Aproximado al verde oscuro de la imagen
 const MUTED = '#7B7B7B';
@@ -47,10 +48,11 @@ function NavItem({ active, svgRaw, label, onClick }) {
 }
 
 /** Barra inferior estilo mock "Parte abajo": blanca con hendidura central y FAB con gradiente. */
-function BottomNav({ isScanning, onFileChange }) {
+function BottomNav() {
   const navigate = useNavigate();
   const location = useLocation();
   const fileInputRef = useRef(null);
+  const [isScanning, setIsScanning] = useState(false);
   const path = location.pathname;
 
   const isHome = path === '/' || path === '';
@@ -89,7 +91,24 @@ function BottomNav({ isScanning, onFileChange }) {
           type="file"
           accept="image/*"
           capture="environment"
-          onChange={onFileChange}
+          onChange={async (event) => {
+            const file = event.target.files?.[0];
+            if (!file) return;
+
+            setIsScanning(true);
+            try {
+              const dataUrl = await fileToDataUrl(file);
+              savePendingScan({ name: file.name, dataUrl });
+              navigate('/analysis');
+            } catch (error) {
+              console.error('Error al procesar la imagen:', error);
+            } finally {
+              setIsScanning(false);
+              if (fileInputRef.current) {
+                fileInputRef.current.value = '';
+              }
+            }
+          }}
           className="hidden"
         />
         <button
