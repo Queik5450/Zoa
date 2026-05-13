@@ -6,6 +6,7 @@ import { getMockAuth, getPendingScan, setMockAuth } from '../../../shared/lib/sc
 import { hydrateMockAuthFromSession, signInWithGoogle } from '../../../shared/lib/auth';
 import { supabase } from '../../../shared/lib/supabaseClient';
 import { apiJson } from '../../../shared/lib/api';
+import { getAuthCooldownRemainingMs, startAuthRateLimit } from '../../../shared/lib/authRateLimit';
 
 function AuthPage() {
   const navigate = useNavigate();
@@ -15,7 +16,7 @@ function AuthPage() {
   const [password, setPassword] = useState('');
   const [submitError, setSubmitError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isRateLimited, setIsRateLimited] = useState(false);
+  const [rateLimitRemainingMs, setRateLimitRemainingMs] = useState(() => getAuthCooldownRemainingMs());
 
   const pendingScan = useMemo(() => getPendingScan(), []);
 
@@ -23,7 +24,7 @@ function AuthPage() {
     let isActive = true;
 
     async function syncSession() {
-      const sessionAuth = await hydrateMockAuthFromSession(mode, fullName || email || 'usuario');
+      const sessionAuth = await hydrateMockAuthFromSession('login', 'usuario');
 
       if (!isActive) {
         return;
@@ -53,12 +54,29 @@ function AuthPage() {
     return () => {
       isActive = false;
     };
-  }, [email, fullName, mode, navigate, pendingScan]);
+  }, [navigate, pendingScan]);
+
+  useEffect(() => {
+    if (rateLimitRemainingMs <= 0) return undefined;
+
+    const intervalId = window.setInterval(() => {
+      setRateLimitRemainingMs(getAuthCooldownRemainingMs());
+    }, 1000);
+
+    return () => window.clearInterval(intervalId);
+  }, [rateLimitRemainingMs]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     const normalizedEmail = email.trim();
     const displayName = (fullName || normalizedEmail.split('@')[0] || 'usuario').trim();
+    const cooldownRemaining = getAuthCooldownRemainingMs();
+
+    if (cooldownRemaining > 0) {
+      setRateLimitRemainingMs(cooldownRemaining);
+      setSubmitError(`Demasiadas solicitudes. Espera ${Math.ceil(cooldownRemaining / 1000)}s.`);
+      return;
+    }
 
     setIsSubmitting(true);
     setSubmitError('');
@@ -128,9 +146,10 @@ function AuthPage() {
     } catch (error) {
       const is429 = error?.status === 429 || (error?.message && /429|Too Many Requests/i.test(error.message));
       if (is429) {
-        setIsRateLimited(true);
-        setSubmitError('Demasiadas solicitudes. Intenta de nuevo en unos minutos.');
-        setTimeout(() => setIsRateLimited(false), 30000);
+        startAuthRateLimit();
+        const nextRemaining = getAuthCooldownRemainingMs();
+        setRateLimitRemainingMs(nextRemaining);
+        setSubmitError(`Demasiadas solicitudes. Espera ${Math.ceil(nextRemaining / 1000)}s.`);
       } else {
         setSubmitError(error?.message || 'No se pudo autenticar.');
       }
@@ -240,7 +259,7 @@ function AuthPage() {
 
           <button
             type="submit"
-            disabled={isSubmitting || isRateLimited}
+            disabled={isSubmitting || rateLimitRemainingMs > 0}
             className="mt-2 inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[#c1e14f] px-4 text-sm font-bold text-black shadow-[0_8px_20px_rgba(0,0,0,0.12)] transition-transform active:scale-[0.98]"
           >
             {mode === 'login' ? <LogIn size={16} /> : <UserPlus size={16} />}

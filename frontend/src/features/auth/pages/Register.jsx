@@ -5,6 +5,7 @@ import { hydrateMockAuthFromSession, signInWithGoogle } from '../../../shared/li
 import { supabase } from '../../../shared/lib/supabaseClient';
 import { getPendingPublicationDraft, publishPendingPublicationDraft, savePendingPublicationDraft } from '../../../shared/lib/publicationDraft';
 import { apiJson } from '../../../shared/lib/api';
+import { getAuthCooldownRemainingMs, startAuthRateLimit } from '../../../shared/lib/authRateLimit';
 
 function Register() {
   const navigate = useNavigate();
@@ -13,12 +14,29 @@ function Register() {
   const [password, setPassword] = useState('');
   const [submitError, setSubmitError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isRateLimited, setIsRateLimited] = useState(false);
+  const [rateLimitRemainingMs, setRateLimitRemainingMs] = useState(() => getAuthCooldownRemainingMs());
+
+  useEffect(() => {
+    if (rateLimitRemainingMs <= 0) return undefined;
+
+    const intervalId = window.setInterval(() => {
+      setRateLimitRemainingMs(getAuthCooldownRemainingMs());
+    }, 1000);
+
+    return () => window.clearInterval(intervalId);
+  }, [rateLimitRemainingMs]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const normalizedEmail = email.trim();
     const displayName = (username || normalizedEmail.split('@')[0] || 'usuario').trim();
+    const cooldownRemaining = getAuthCooldownRemainingMs();
+
+    if (cooldownRemaining > 0) {
+      setRateLimitRemainingMs(cooldownRemaining);
+      setSubmitError(`Demasiadas solicitudes. Espera ${Math.ceil(cooldownRemaining / 1000)}s.`);
+      return;
+    }
 
     setIsSubmitting(true);
     setSubmitError('');
@@ -70,10 +88,10 @@ function Register() {
     } catch (error) {
       const is429 = error?.status === 429 || (error?.message && /429|Too Many Requests/i.test(error.message));
       if (is429) {
-        setIsRateLimited(true);
-        setSubmitError('Demasiadas solicitudes. Intenta de nuevo en unos minutos.');
-        // auto-clear rate limit after 30s
-        setTimeout(() => setIsRateLimited(false), 30000);
+        startAuthRateLimit();
+        const nextRemaining = getAuthCooldownRemainingMs();
+        setRateLimitRemainingMs(nextRemaining);
+        setSubmitError(`Demasiadas solicitudes. Espera ${Math.ceil(nextRemaining / 1000)}s.`);
       } else {
         setSubmitError(error?.message || 'No se pudo registrar.');
       }
@@ -170,7 +188,7 @@ function Register() {
 
             <button
               type="submit"
-              disabled={isSubmitting || isRateLimited}
+              disabled={isSubmitting || rateLimitRemainingMs > 0}
               className="mt-1 rounded-lg bg-[#c1e734] py-2 text-center text-[14px] font-semibold text-[#1e1e1e] shadow-[0px_4px_4px_rgba(0,_0,_0,_0.25)] disabled:opacity-70 sm:text-[15px]"
             >
               {isSubmitting ? 'Registrando...' : 'Registrarse'}

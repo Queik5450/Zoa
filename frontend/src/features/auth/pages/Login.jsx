@@ -4,6 +4,7 @@ import Header from '../../../shared/components/Header';
 import { hydrateMockAuthFromSession, signInWithGoogle } from '../../../shared/lib/auth';
 import { supabase } from '../../../shared/lib/supabaseClient';
 import { getPendingPublicationDraft, publishPendingPublicationDraft, savePendingPublicationDraft } from '../../../shared/lib/publicationDraft';
+import { getAuthCooldownRemainingMs, startAuthRateLimit } from '../../../shared/lib/authRateLimit';
 
 function Login() {
   const navigate = useNavigate();
@@ -11,12 +12,29 @@ function Login() {
   const [password, setPassword] = useState('');
   const [submitError, setSubmitError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isRateLimited, setIsRateLimited] = useState(false);
+  const [rateLimitRemainingMs, setRateLimitRemainingMs] = useState(() => getAuthCooldownRemainingMs());
+
+  React.useEffect(() => {
+    if (rateLimitRemainingMs <= 0) return undefined;
+
+    const intervalId = window.setInterval(() => {
+      setRateLimitRemainingMs(getAuthCooldownRemainingMs());
+    }, 1000);
+
+    return () => window.clearInterval(intervalId);
+  }, [rateLimitRemainingMs]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const emailValue = username.includes('@') ? username.trim() : `${username.trim()}@zoa.local`;
     const displayName = (username || 'usuario').trim();
+    const cooldownRemaining = getAuthCooldownRemainingMs();
+
+    if (cooldownRemaining > 0) {
+      setRateLimitRemainingMs(cooldownRemaining);
+      setSubmitError(`Demasiadas solicitudes. Espera ${Math.ceil(cooldownRemaining / 1000)}s.`);
+      return;
+    }
 
     setIsSubmitting(true);
     setSubmitError('');
@@ -50,9 +68,10 @@ function Login() {
     } catch (error) {
       const is429 = error?.status === 429 || (error?.message && /429|Too Many Requests/i.test(error.message));
       if (is429) {
-        setIsRateLimited(true);
-        setSubmitError('Demasiadas solicitudes. Intenta de nuevo en unos minutos.');
-        setTimeout(() => setIsRateLimited(false), 30000);
+        startAuthRateLimit();
+        const nextRemaining = getAuthCooldownRemainingMs();
+        setRateLimitRemainingMs(nextRemaining);
+        setSubmitError(`Demasiadas solicitudes. Espera ${Math.ceil(nextRemaining / 1000)}s.`);
       } else {
         setSubmitError(error?.message || 'No se pudo iniciar sesión.');
       }
@@ -127,7 +146,7 @@ function Login() {
 
             <button
               type="submit"
-              disabled={isSubmitting || isRateLimited}
+              disabled={isSubmitting || rateLimitRemainingMs > 0}
               className="mt-1 rounded-lg bg-[#c1e734] py-2 text-center text-[14px] font-semibold text-[#1e1e1e] shadow-[0px_4px_4px_rgba(0,_0,_0,_0.25)] disabled:opacity-70 sm:text-[15px]"
             >
               {isSubmitting ? 'Ingresando...' : 'Iniciar Sesión'}
