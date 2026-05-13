@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Header from '../../../shared/components/Header';
-import { setMockAuth } from '../../../shared/lib/scanFlow';
-import { apiJson } from '../../../shared/lib/api';
+import { hydrateMockAuthFromSession, signInWithGoogle } from '../../../shared/lib/auth';
 import { supabase } from '../../../shared/lib/supabaseClient';
 
 function Login() {
@@ -35,28 +34,24 @@ function Login() {
         throw new Error('No se pudo iniciar sesión.');
       }
 
-      setMockAuth({
-        mode: 'login',
-        displayName: user.user_metadata?.full_name || displayName,
-        email: user.email || emailValue,
-        userId: user.id,
-        authenticatedAt: Date.now(),
-      });
-
-      await apiJson('/profiles/sync', {
-        method: 'POST',
-        body: {
-          user_id: user.id,
-          email: user.email || emailValue,
-          display_name: user.user_metadata?.full_name || displayName,
-          avatar_url: user.user_metadata?.avatar_url || null,
-        },
-      });
+      await hydrateMockAuthFromSession('login', user.user_metadata?.full_name || displayName);
 
       navigate('/');
     } catch (error) {
       setSubmitError(error?.message || 'No se pudo iniciar sesión.');
     } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setSubmitError('');
+    setIsSubmitting(true);
+
+    try {
+      await signInWithGoogle('/login');
+    } catch (error) {
+      setSubmitError(error?.message || 'No se pudo iniciar sesión con Google.');
       setIsSubmitting(false);
     }
   };
@@ -81,6 +76,15 @@ function Login() {
           className="mt-12 w-full max-w-[360px] rounded-[20px] bg-[#7f962b] px-0 pb-[24px] pt-5 shadow-[0_4px_4px_rgba(0,0,0,0.25)] sm:mt-[84px] sm:pb-[31px] sm:pt-6"
         >
           <div className="mx-auto flex w-full max-w-[320px] flex-col gap-3 px-4 text-white sm:px-0">
+            <button
+              type="button"
+              onClick={handleGoogleLogin}
+              disabled={isSubmitting}
+              className="rounded-lg bg-white py-2 text-center text-[14px] font-semibold text-[#1e1e1e] shadow-[0px_4px_4px_rgba(0,_0,_0,_0.25)] disabled:opacity-70 sm:text-[15px]"
+            >
+              Continuar con Google
+            </button>
+
             <div className="flex flex-col gap-[3px]">
               <label className="text-left text-[14px] sm:text-[15px]">Username o correo electronico</label>
               <input
