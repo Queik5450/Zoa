@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import DiscoverCarouselSlide from '../../../shared/components/DiscoverCarouselSlide';
 import { getPublishedCards } from '../../../shared/lib/scanFlow';
 import { MOCK_HOME_CARD_EXTRA } from '../../../shared/data/zoaMocks';
@@ -63,6 +63,9 @@ function Home() {
     setActiveIndex((i) => (i - 1 + n) % n);
   }, [n]);
 
+  const featuredCard = cards[activeIndex] || cards[0] || null;
+  const backdropCards = useMemo(() => cards.slice(1, 3), [cards]);
+
   const onTouchStart = (e) => {
     const t = e.touches[0];
     touchRef.current = { x: t.clientX, y: t.clientY };
@@ -78,96 +81,82 @@ function Home() {
   };
 
   return (
-    <>
-      <div className="flex shrink-0 flex-col gap-3 px-4 pb-2 pt-3">
-        <div className="flex items-center justify-between gap-2">
-          <h2 className="text-2xl font-black tracking-tight text-black">Descubre</h2>
-        </div>
-      </div>
+    <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-[linear-gradient(180deg,#f7fbef_0%,#eef6df_28%,#f8faf7_100%)] px-3 pb-3 pt-2 sm:px-4 sm:pb-4 sm:pt-3">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-[radial-gradient(circle_at_top_left,rgba(193,225,79,0.18),transparent_62%),radial-gradient(circle_at_top_right,rgba(128,144,46,0.12),transparent_58%)]" />
 
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col items-center justify-center px-3 py-2">
-        <div
-          className="relative w-full max-w-[300px] touch-pan-y"
-          style={{ aspectRatio: '292 / 560', maxHeight: 'min(62vh, 560px)' }}
-          onTouchStart={onTouchStart}
-          onTouchEnd={onTouchEnd}
-        >
-          {cards.map((card, i) => {
-            const depth = (i - activeIndex + n) % n;
-            const scale = 1 - depth * 0.056;
-            const tx = depth * 10;
-            const ty = depth * 12;
-            const opacity = 1 - Math.min(depth, 6) * 0.14;
-            const z = n - depth;
-            const isFront = depth === 0;
+      <section className="relative z-10 shrink-0">
+        <h2 className="text-center text-[clamp(1.6rem,5vw,2.2rem)] font-black text-[#1f2208]">Descubre</h2>
+      </section>
 
-            return (
-              <div
-                key={card.id}
-                className="absolute left-0 top-0 h-full w-full origin-top transition-all duration-300 ease-out"
-                style={{
-                  zIndex: z,
-                  transform: `translate(${tx}px, ${ty}px) scale(${scale})`,
-                  opacity,
-                  pointerEvents: isFront ? 'auto' : 'none',
-                }}
-              >
-                {isFront ? (
-                  <div className="flex h-full min-h-0 w-full items-stretch justify-center">
-                    <DiscoverCarouselSlide card={card} isScanning={isScanning} />
-                  </div>
-                ) : (
-                  <div className="mx-auto flex h-full w-full max-w-[280px] flex-col overflow-hidden rounded-[18px] border-2 border-white/70 bg-white shadow-[0_12px_28px_rgba(0,0,0,0.2)]">
-                    <div className="relative min-h-0 flex-1 bg-neutral-200">
-                      <img src={card.image} alt="" className="absolute inset-0 h-full w-full object-cover" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/55 to-transparent" />
-                      <p className="absolute bottom-3 left-3 right-3 truncate text-sm font-bold text-white drop-shadow">
-                        {card.name}
-                      </p>
-                    </div>
-                  </div>
-                )}
+      <section
+        className="relative z-10 mt-3 flex min-h-0 flex-[1.05] items-center justify-center sm:mt-4"
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+      >
+        <div className="relative flex w-full max-w-[min(100%,330px)] items-end justify-center" style={{ aspectRatio: '292 / 560' }}>
+          {backdropCards.map((card, index) => (
+            <div
+              key={card.id}
+              className="absolute bottom-0 left-1/2 h-[94%] w-full -translate-x-1/2 overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_20px_44px_rgba(0,0,0,0.18)]"
+              style={{
+                transform: `translateX(-50%) translate(${(index + 1) * 10}px, ${(index + 1) * 12}px) scale(${1 - (index + 1) * 0.06})`,
+                opacity: 1 - (index + 1) * 0.14,
+                zIndex: 10 - index,
+              }}
+            >
+              <img src={card.image} alt="" className="absolute inset-0 h-full w-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
+            </div>
+          ))}
+
+          <div className="relative z-20 h-full w-full">
+            {featuredCard ? (
+              <DiscoverCarouselSlide card={featuredCard} isScanning={isScanning} />
+            ) : (
+              <div className="flex h-full items-center justify-center rounded-[24px] border border-white/70 bg-white text-sm font-semibold text-neutral-600 shadow-[0_18px_40px_rgba(0,0,0,0.12)]">
+                Sin publicaciones disponibles
               </div>
-            );
-          })}
-        </div>
-
-        <div className="mt-3 flex w-full max-w-[300px] items-center justify-between gap-2 px-1">
-          <button
-            type="button"
-            aria-label="Anterior"
-            onClick={goPrev}
-            className="rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm font-bold text-neutral-700 shadow-sm"
-          >
-            ‹
-          </button>
-          <div className="flex flex-1 justify-center gap-1.5">
-            {cards.map((c, idx) => (
-              <button
-                key={c.id}
-                type="button"
-                aria-label={`Tarjeta ${idx + 1}`}
-                onClick={() => setActiveIndex(idx)}
-                className={
-                  idx === activeIndex
-                    ? 'h-2 w-6 rounded-full bg-[#c1e14f] transition-all'
-                    : 'h-2 w-2 rounded-full bg-neutral-300 transition-all'
-                }
-              />
-            ))}
+            )}
           </div>
-          <button
-            type="button"
-            aria-label="Siguiente"
-            onClick={goNext}
-            className="rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm font-bold text-neutral-700 shadow-sm"
-          >
-            ›
-          </button>
         </div>
-        <p className="mt-1 text-center text-[10px] text-neutral-500">Desliza o usa las flechas para cambiar de tarjeta</p>
+      </section>
+
+      <div className="relative z-10 mt-3 flex shrink-0 items-center justify-between gap-2 sm:mt-4">
+        <button
+          type="button"
+          aria-label="Anterior"
+          onClick={goPrev}
+          className="flex h-10 w-10 items-center justify-center rounded-2xl border border-[#d8e1bd] bg-white text-xl font-black text-[#596427] shadow-sm sm:h-11 sm:w-11"
+        >
+          ‹
+        </button>
+        <div className="flex flex-1 justify-center gap-1.5">
+          {cards.map((card, idx) => (
+            <button
+              key={card.id}
+              type="button"
+              aria-label={`Tarjeta ${idx + 1}`}
+              onClick={() => setActiveIndex(idx)}
+              className={
+                idx === activeIndex
+                  ? 'h-2 w-7 rounded-full bg-[#c1e14f] shadow-[0_0_0_3px_rgba(193,225,79,0.18)] transition-all'
+                  : 'h-2 w-2 rounded-full bg-[#ced7bb] transition-all'
+              }
+            />
+          ))}
+        </div>
+        <button
+          type="button"
+          aria-label="Siguiente"
+          onClick={goNext}
+          className="flex h-10 w-10 items-center justify-center rounded-2xl border border-[#d8e1bd] bg-white text-xl font-black text-[#596427] shadow-sm sm:h-11 sm:w-11"
+        >
+          ›
+        </button>
       </div>
-    </>
+
+      <p className="relative z-10 mt-2 text-center text-[10px] font-medium text-neutral-500 sm:text-[11px]">Desliza o usa flechas para cambiar tarjeta</p>
+    </div>
   );
 }
 
