@@ -18,72 +18,80 @@ function Album() {
   const countLabel = tab === 'animales' ? `${filtered.length} animales` : `${filtered.length} plantas`;
 
   return (
-    <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-[#eef3f8]">
-      <div className="shrink-0 px-3 pb-2 pt-1">
-        <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-100/80 p-1">
-          <div className="grid grid-cols-2 gap-1">
-            <button
-              type="button"
-              onClick={() => setTab('animales')}
-              className={`rounded-xl py-2.5 text-center text-sm font-bold ${
-                tab === 'animales' ? 'bg-[#c1e14f] text-black shadow-sm' : 'bg-transparent text-black'
-              }`}
-            >
-              Animales
-            </button>
-            <button
-              type="button"
-              onClick={() => setTab('plantas')}
-              className={`rounded-xl py-2.5 text-center text-sm font-bold ${
-                tab === 'plantas' ? 'bg-[#c1e14f] text-black shadow-sm' : 'bg-neutral-200/80 text-black'
-              }`}
-            >
-              Plantas
-            </button>
-          </div>
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-[#edf7f9] text-black">
+      <div className="shrink-0 px-2 pt-2">
+        <div className="flex items-end">
+          <button
+            type="button"
+            onClick={() => setTab('animales')}
+            className={`flex-1 rounded-t-[18px] rounded-b-none px-4 py-3 text-center text-[18px] font-semibold transition-colors ${
+              tab === 'animales' ? 'bg-[#c1e734] text-black' : 'bg-[#f1f1f1] text-black'
+            }`}
+          >
+            Animales
+          </button>
+          <button
+            type="button"
+            onClick={() => setTab('plantas')}
+            className={`flex-1 rounded-t-[18px] rounded-b-none px-4 py-3 text-center text-[18px] font-medium transition-colors ${
+              tab === 'plantas' ? 'bg-[#c1e734] text-black' : 'bg-[#f1f1f1] text-black'
+            }`}
+          >
+            Plantas
+          </button>
         </div>
+        <div className="h-px bg-[#b8b8b8]" />
       </div>
 
-      <div className="shrink-0 px-3 pb-2">
-        <div className="flex items-center gap-2 rounded-2xl border border-neutral-200 bg-white px-3 py-2.5 shadow-md">
-          <ChevronDown className="h-5 w-5 shrink-0 text-neutral-500" />
+      <div className="shrink-0 px-4 pt-2">
+        <div className="flex items-center overflow-hidden rounded-[10px] bg-white shadow-[0_4px_4px_rgba(0,0,0,0.25)] ring-1 ring-black/10">
+          <button
+            type="button"
+            className="flex h-[34px] w-[34px] shrink-0 items-center justify-center border-r border-[#bfbfbf] bg-white text-[#787878]"
+            aria-label="Abrir filtros"
+          >
+            <ChevronDown className="h-5 w-5" />
+          </button>
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder={tab === 'animales' ? 'Buscar animal...' : 'Buscar planta...'}
-            className="min-w-0 flex-1 bg-transparent text-sm text-black outline-none placeholder:text-neutral-400"
+            className="min-w-0 flex-1 bg-transparent px-3 text-[12px] font-semibold text-black outline-none placeholder:text-[#a4a4a4]"
           />
-          <Search className="h-5 w-5 shrink-0 text-neutral-500" />
+          <div className="flex h-[34px] w-[38px] shrink-0 items-center justify-center pr-1 text-[#7b7b7b]">
+            <Search className="h-[18px] w-[18px]" />
+          </div>
         </div>
       </div>
 
-      <p className="shrink-0 px-4 pb-2 text-xs font-semibold text-neutral-600">{countLabel}</p>
+      <div className="shrink-0 px-1.5 pt-3">
+        <div className="h-px bg-[#b8b8b8]" />
+      </div>
 
-      <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain px-3 pb-2">
-        <div className="grid grid-cols-2 gap-3 pb-24 [grid-template-columns:minmax(0,1fr)_minmax(0,1fr)]">
+      <p className="shrink-0 px-1.5 pt-2 text-[13px] text-black">{countLabel}</p>
+
+      <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain px-1.5 pb-[calc(var(--zoa-bottom-height)+52px)] pt-4">
+        <div className="grid gap-[9px] [grid-template-columns:repeat(auto-fit,minmax(140px,1fr))] md:[grid-template-columns:repeat(auto-fit,minmax(160px,1fr))]">
           {filtered.map((item) => (
-            <div key={item.id} className="min-w-0">
-              <div className="relative aspect-[3/4] w-full max-w-full overflow-hidden rounded-2xl">
-                <button
-                  type="button"
-                  onClick={() => navigate(`/album/especie/${item.speciesId}`, { state: { fromAlbum: true } })}
-                  className="group absolute inset-0 h-full w-full overflow-hidden rounded-2xl bg-neutral-300 text-left shadow-md outline-none ring-offset-2 focus-visible:ring-2 focus-visible:ring-[#80902e]"
-                >
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-transparent to-transparent" />
-                  <span className="absolute left-2 top-2 max-w-[70%] truncate text-xs font-semibold text-white drop-shadow">
-                    {item.name}
-                  </span>
-                  <span className="absolute right-2 top-2 text-xs font-semibold text-white drop-shadow">{item.badge}</span>
-                </button>
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => navigate(`/album/especie/${item.speciesId}`, { state: { fromAlbum: true } })}
+              className="group relative aspect-[1.04] overflow-hidden rounded-[20px] bg-neutral-300 text-left shadow-[0_4px_4px_rgba(0,0,0,0.25)] outline-none focus-visible:ring-2 focus-visible:ring-[#80902e] focus-visible:ring-offset-2"
+            >
+              <img
+                src={item.image}
+                alt={item.name}
+                className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                loading="lazy"
+                decoding="async"
+              />
+              <div className="absolute inset-0 bg-black/25" />
+              <div className="absolute inset-x-0 top-0 flex items-start justify-between p-1.5 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.65)]">
+                <span className="max-w-[72%] truncate text-[11px] font-medium leading-none">{item.name}</span>
+                <span className="text-[11px] font-medium leading-none">{item.badge}</span>
               </div>
-            </div>
+            </button>
           ))}
         </div>
       </div>

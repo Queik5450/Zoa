@@ -60,7 +60,7 @@ function BottomNav({ isScanning, onFileChange }) {
   const isProfile = path.startsWith('/profile');
 
   return (
-    <div className="relative h-[var(--zoa-bottom-height)] w-full">
+    <div className="relative h-[var(--zoa-bottom-height)] w-screen">
       <img
         src={bottomSvgUrl}
         alt=""

@@ -7,7 +7,7 @@ import topSvgUrl from '../assets/top.svg?url';
 function Header() {
   return (
     <header className="fixed inset-x-0 top-0 z-30 w-full shrink-0">
-      <div className="mx-auto h-[var(--zoa-header-height)] w-full max-w-[var(--zoa-shell-width)]">
+      <div className="h-[var(--zoa-header-height)] w-screen">
         <img
           src={topSvgUrl}
           alt=""
