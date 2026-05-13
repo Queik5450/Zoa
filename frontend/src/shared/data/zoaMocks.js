@@ -182,16 +182,91 @@ export const SPECIES_DETAIL = {
   },
 };
 
-export const MOCK_HOME_CARD_EXTRA = {
-  name: 'Flor de Mayo',
-  species: 'Plumeria rubra',
-  scientificName: 'Plumeria rubra',
-  authorName: '@USUARIO',
-  avatarLabel: 'US',
-  description:
-    'La Plumeria rubra, conocida como flor de mayo, es un arbusto caducifolio muy apreciado por sus flores aromáticas.',
-  location: 'Parque Nacional Canaima',
-  likes: '1k',
-  comments: '100',
-  image: 'https://picsum.photos/seed/zoaFlor/600/800',
-};
+export const MOCK_HOME_CARDS = [
+  {
+    id: 'home-flor-mayo',
+    name: 'Flor de Mayo',
+    species: 'Plumeria rubra',
+    scientificName: 'Plumeria rubra',
+    authorName: '@USUARIO',
+    avatarLabel: 'US',
+    description:
+      'La Plumeria rubra, conocida como flor de mayo, es un arbusto caducifolio muy apreciado por sus flores aromáticas.',
+    location: 'Parque Nacional Canaima',
+    likes: '1k',
+    comments: '100',
+    image: 'https://picsum.photos/seed/zoaFlor/600/800',
+  },
+  {
+    id: 'home-mono-capuchino',
+    name: 'Mono Capuchino',
+    species: 'Cebus capucinus',
+    scientificName: 'Cebus capucinus',
+    authorName: '@RUTA.SELVA',
+    avatarLabel: 'RS',
+    description:
+      'Primates inquietos y muy observadores que suelen moverse por el dosel en pequeños grupos familiares.',
+    location: 'Sierra de Lema',
+    likes: '842',
+    comments: '56',
+    image: 'https://picsum.photos/seed/zoaMonoHome/600/800',
+  },
+  {
+    id: 'home-tucan',
+    name: 'Tucán',
+    species: 'Ramphastos sulfuratus',
+    scientificName: 'Ramphastos sulfuratus',
+    authorName: '@CANOPY.CAM',
+    avatarLabel: 'CC',
+    description:
+      'Ave tropical de pico grande y colores contrastantes; muy visible en bordes de bosque húmedo.',
+    location: 'Delta Amacuro',
+    likes: '1.2k',
+    comments: '104',
+    image: 'https://picsum.photos/seed/zoaTucanHome/600/800',
+  },
+  {
+    id: 'home-jaguar',
+    name: 'Jaguar',
+    species: 'Panthera onca',
+    scientificName: 'Panthera onca',
+    authorName: '@NOCHE.FAUNA',
+    avatarLabel: 'NF',
+    description:
+      'Felino emblemático de la región, con patrones únicos en el pelaje y presencia solitaria.',
+    location: 'Canaima',
+    likes: '2.4k',
+    comments: '211',
+    image: 'https://picsum.photos/seed/zoaJaguarHome/600/800',
+  },
+  {
+    id: 'home-orquidea',
+    name: 'Orquídea',
+    species: 'Epidendrum ibaguense',
+    scientificName: 'Epidendrum ibaguense',
+    authorName: '@JARDIN.AMAZONICO',
+    avatarLabel: 'JA',
+    description:
+      'Epífita de floración vistosa que destaca por su forma compacta y color intenso en zonas cálidas.',
+    location: 'Puerto Ordaz',
+    likes: '638',
+    comments: '41',
+    image: 'https://picsum.photos/seed/zoaOrquideaHome/600/800',
+  },
+  {
+    id: 'home-heliconia',
+    name: 'Heliconia',
+    species: 'Heliconia psittacorum',
+    scientificName: 'Heliconia psittacorum',
+    authorName: '@BOSQUE.VIVO',
+    avatarLabel: 'BV',
+    description:
+      'Planta ornamental de brácteas llamativas que suele atraer polinizadores en ambientes húmedos.',
+    location: 'Bolívar',
+    likes: '901',
+    comments: '72',
+    image: 'https://picsum.photos/seed/zoaHeliconiaHome/600/800',
+  },
+];
+
+export const MOCK_HOME_CARD_EXTRA = MOCK_HOME_CARDS[0];

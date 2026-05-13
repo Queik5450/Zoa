@@ -83,6 +83,7 @@ function Map() {
   }, [publications, query]);
 
   const visiblePins = searchActive ? filteredPublications : publications;
+  const hasMapResults = publications.length > 0;
   const stats = useMemo(
     () => ({
       photos: filteredPublications.filter((item) => item.mediaType === 'photo' || item.mediaType === undefined).length,
@@ -144,6 +145,12 @@ function Map() {
         {isLoading ? (
           <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/80 text-sm font-semibold text-neutral-700 backdrop-blur-sm">
             Cargando mapa...
+          </div>
+        ) : null}
+
+        {!isLoading && !hasMapResults ? (
+          <div className="absolute left-1/2 top-3 z-20 -translate-x-1/2 rounded-full border border-[#dbe6b1] bg-white/95 px-4 py-2 text-center text-xs font-semibold text-[#6c7920] shadow-[0_10px_24px_rgba(0,0,0,0.12)] backdrop-blur-sm">
+            No se hallaron publicaciones en el mapa
           </div>
         ) : null}
 
