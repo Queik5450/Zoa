@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { CheckCircle2, Loader2, Upload, X } from 'lucide-react';
 import {
   clearPendingScan,
+  dataUrlToFile,
   getMockAuth,
   getPendingScan,
   saveLocalGalleryItem,
