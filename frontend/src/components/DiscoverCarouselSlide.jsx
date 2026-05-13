@@ -88,7 +88,7 @@ function DiscoverCarouselSlide({ card, isScanning }) {
   return (
     <main className="relative z-0 mx-auto flex h-full min-h-0 w-full max-w-[280px] shrink-0 flex-col items-stretch justify-center">
       <div
-        className="relative flex h-full min-h-0 w-full cursor-pointer"
+        className="relative flex h-full min-h-0 w-full flex-col cursor-pointer"
         onClick={handleToggleFlip}
         style={{ perspective: '1000px' }}
         role="button"
@@ -102,20 +102,25 @@ function DiscoverCarouselSlide({ card, isScanning }) {
         aria-label="Ver detalles de la publicación"
       >
         <div
-          className="relative w-full shadow-[0_12px_30px_rgba(0,0,0,0.18)]"
+          className="relative flex-1 w-full shadow-[0_12px_30px_rgba(0,0,0,0.18)]"
           style={{
             transformStyle: 'preserve-3d',
             transition: 'transform 0.6s',
             transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
-            aspectRatio: '292 / 522',
           }}
         >
           <div
             className="absolute inset-0 overflow-hidden rounded-[18px] bg-white shadow-[0_10px_28px_rgba(0,0,0,0.14)]"
-            style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
+            style={{
+              backfaceVisibility: 'hidden',
+              WebkitBackfaceVisibility: 'hidden',
+              transform: 'translateZ(0)',
+              backgroundColor: '#ffffff',
+              willChange: 'transform',
+            }}
           >
             <div className="flex h-full flex-col">
-              <div className="relative flex-[1.12] overflow-hidden bg-neutral-200">
+              <div className="relative flex-[5] overflow-hidden bg-neutral-200">
                 <img src={card.image} alt={card.name} className="h-full w-full object-cover object-center" />
                 <p className="pointer-events-none absolute left-3 top-3 max-w-[85%] text-[11px] font-bold text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.85)]">
                   Foto tomada por: {authorName.replace(/^@/, '')}
@@ -128,40 +133,41 @@ function DiscoverCarouselSlide({ card, isScanning }) {
                 ) : null}
               </div>
 
-              <div className="flex flex-[0.36] flex-col justify-between bg-white px-3 pb-3 pt-2">
+              <div className="flex flex-1 flex-col justify-center bg-white px-4 pb-3 pt-2">
                 <div className="min-w-0">
-                  <span className="block truncate text-[16px] font-black leading-tight text-black">{card.name}</span>
-                  <span className="mt-0.5 block truncate text-[13px] font-medium text-neutral-500">{scientificLabel}</span>
+                  <span className="block truncate text-[22px] font-black leading-tight text-black">{card.name}</span>
                 </div>
 
-                <div className="mt-1 flex items-center gap-1.5 text-[11px] text-neutral-500">
-                  <MapPin size={12} className="shrink-0 text-neutral-500" />
-                  <span className="truncate leading-none">{locationLabel}</span>
-                </div>
+                <div className="mt-1 flex w-full items-end justify-between gap-3">
+                  <div className="flex min-w-0 items-center gap-1 text-[13px] font-bold text-neutral-500">
+                    <MapPin size={14} className="shrink-0 text-neutral-400" />
+                    <span className="truncate leading-none">{scientificLabel}</span>
+                  </div>
 
-                <div className="mt-2 flex items-center gap-4 text-[13px] font-semibold text-black">
-                  <button
-                    type="button"
-                    onClick={handleHeartClick}
-                    className="flex items-center gap-1.5 rounded-full px-1 py-1 transition-transform active:scale-95"
-                  >
-                    <Heart
-                      size={20}
-                      className={cn(
-                        'transition-colors',
-                        isLiked ? 'fill-[#2eae48] text-[#2eae48]' : 'fill-transparent text-[#2eae48]',
-                      )}
-                    />
-                    <span>{baseLikes}</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleCommentsClick}
-                    className="flex items-center gap-1.5 rounded-full px-1 py-1 transition-transform active:scale-95"
-                  >
-                    <MessageSquare size={20} className="text-neutral-500" />
-                    <span>{displayedComments}</span>
-                  </button>
+                  <div className="flex items-center gap-3 text-[13px] font-bold text-neutral-500">
+                    <button
+                      type="button"
+                      onClick={handleHeartClick}
+                      className="flex items-center gap-1 transition-transform active:scale-95"
+                    >
+                      <Heart
+                        size={18}
+                        className={cn(
+                          'transition-colors',
+                          isLiked ? 'fill-[#2eae48] text-[#2eae48]' : 'text-[#2eae48]',
+                        )}
+                      />
+                      <span>{baseLikes}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleCommentsClick}
+                      className="flex items-center gap-1 transition-transform active:scale-95"
+                    >
+                      <MessageSquare size={18} className="fill-neutral-500 text-neutral-500" />
+                      <span>{displayedComments}</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -172,7 +178,9 @@ function DiscoverCarouselSlide({ card, isScanning }) {
             style={{
               backfaceVisibility: 'hidden',
               WebkitBackfaceVisibility: 'hidden',
-              transform: 'rotateY(180deg)',
+              transform: 'rotateY(180deg) translateZ(0)',
+              backgroundColor: '#f6f8f4',
+              willChange: 'transform',
             }}
           >
             <h2 className="mb-4 pt-1 text-2xl font-extrabold tracking-tight text-black">{card.name}</h2>
