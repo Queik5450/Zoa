@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import { MapPin, Play } from 'lucide-react';
+import { useParams } from 'react-router-dom';
 import { supabase } from '../../../shared/lib/supabaseClient';
+import PublicationFlipCard from '../../../shared/components/PublicationFlipCard';
 
 const FALLBACK_MEDIA = 'https://1000marcas.net/wp-content/uploads/2025/04/Signo-de-interrogacion.png';
 
@@ -98,8 +98,14 @@ function AlbumSpeciesDetail() {
         id: item.id,
         mediaType: item.media_type,
         mediaUrl: item.media_url || FALLBACK_MEDIA,
-        authorName: item.display_name || 'usuario',
+        name: species?.common_name || 'Especie',
+        species: species?.common_name || 'Especie',
+        scientificName: species?.scientific_name || '',
+        authorName: item.display_name ? `@${item.display_name}` : '@usuario',
         locationLabel: item.location_label || 'Ubicación no disponible',
+        location: item.location_label || 'Ubicación no disponible',
+        description: item.description || species?.description || 'Sin descripción disponible.',
+        image: item.media_type === 'audio' ? FALLBACK_MEDIA : item.media_url || FALLBACK_MEDIA,
         dateLabel: item.created_at ? new Date(item.created_at).toLocaleDateString('es-VE') : 'Sin fecha',
       })),
     [records]
@@ -139,56 +145,11 @@ function AlbumSpeciesDetail() {
       <div className="h-px bg-[#b8b8b8]" />
       <h3 className="px-4 pb-3 pt-3 text-[15px] font-bold text-black">Registros ({recordsCount})</h3>
 
-      <div className="space-y-4 px-3">
+      <div className="space-y-5 px-3">
         {visibleRecords.map((record) => (
-          <Link
-            key={record.id}
-            to={record.mediaType === 'audio' ? `/album/audio/${record.id}` : `/album/imagen/${record.id}`}
-            className="block overflow-hidden rounded-[20px] shadow-[0_4px_10px_rgba(0,0,0,0.45)]"
-            style={{
-              backgroundImage: record.mediaType === 'audio' ? `url(${record.mediaUrl})` : undefined,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-            }}
-          >
-            {record.mediaType === 'audio' ? (
-              <div className="bg-black/35 px-4 pb-3 pt-2 backdrop-blur-[1px]">
-                <div className="flex items-start justify-between gap-4 text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.85)]">
-                  <p className="text-[13px] font-semibold">Grabado por: {record.authorName}</p>
-                  <p className="flex items-center gap-1 text-[10px] font-semibold">
-                    <MapPin className="h-3 w-3 text-red-400" />
-                    {record.locationLabel}
-                  </p>
-                </div>
-
-                <div className="my-3 flex h-9 items-end justify-center gap-[3px]">
-                  {[10, 18, 14, 24, 12, 28, 16, 20, 14, 22, 12, 18].map((h, i) => (
-                    <span key={i} className="w-[3px] rounded-full bg-white/90" style={{ height: h }} />
-                  ))}
-                </div>
-
-                <div className="flex items-center justify-between text-[11px] font-semibold text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.85)]">
-                  <span>{record.dateLabel}</span>
-                  <Play className="h-7 w-7 fill-white" />
-                </div>
-              </div>
-            ) : (
-              <div className="relative aspect-[365/267]">
-                <img src={record.mediaUrl} alt="Registro visual" className="h-full w-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-
-                <div className="absolute left-3 top-3 text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.85)]">
-                  <p className="text-[15px] font-semibold">Tomada por: {record.authorName}</p>
-                  <p className="text-[10px] font-semibold">{record.dateLabel}</p>
-                </div>
-
-                <div className="absolute bottom-3 left-3 flex items-center gap-1 text-[11px] font-semibold text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.85)]">
-                  <MapPin className="h-3.5 w-3.5 text-red-400" />
-                  {record.locationLabel}
-                </div>
-              </div>
-            )}
-          </Link>
+          <div key={record.id} className="h-[520px] w-full">
+            <PublicationFlipCard card={record} />
+          </div>
         ))}
       </div>
 

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import Header from '../../../shared/components/Header';
 import { hydrateMockAuthFromSession, signInWithGoogle } from '../../../shared/lib/auth';
 import { supabase } from '../../../shared/lib/supabaseClient';
+import { getPendingPublicationDraft, publishPendingPublicationDraft, savePendingPublicationDraft } from '../../../shared/lib/publicationDraft';
 
 function Login() {
   const navigate = useNavigate();
@@ -35,6 +36,14 @@ function Login() {
       }
 
       await hydrateMockAuthFromSession('login', user.user_metadata?.full_name || displayName);
+
+      const pendingDraft = getPendingPublicationDraft();
+      if (pendingDraft) {
+        savePendingPublicationDraft(pendingDraft);
+        const published = await publishPendingPublicationDraft(pendingDraft);
+        navigate(`/publicacion?id=${published?.id || ''}`, { replace: true });
+        return;
+      }
 
       navigate('/');
     } catch (error) {

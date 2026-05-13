@@ -3,14 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { CheckCircle2, Loader2, Upload, X } from 'lucide-react';
 import {
   clearPendingScan,
-  dataUrlToFile,
   getMockAuth,
   getPendingScan,
   saveLocalGalleryItem,
-  savePublishedCard,
 } from '../../../shared/lib/scanFlow';
-import { apiUrl } from '../../../shared/lib/api';
-import { supabase } from '../../../shared/lib/supabaseClient';
+import PublicationFlipCard from '../../../shared/components/PublicationFlipCard';
+import { buildPublicationCardFromDraft, savePendingPublicationDraft } from '../../../shared/lib/publicationDraft';
 
 const SCAN_ENDPOINT = 'https://zoa-5p6r.onrender.com/api/scan';
 
@@ -25,8 +23,28 @@ function AnalysisPage() {
     latitude: null,
     longitude: null,
   });
-  const [isPublishing, setIsPublishing] = useState(false);
-  const [publishError, setPublishError] = useState('');
+
+  const authSession = getMockAuth();
+  const displayName = authSession?.displayName || 'usuario';
+  const draft = analysisData
+    ? {
+        id: analysisData.id || pendingScan?.name || 'preview-publication',
+        name: analysisData.common_name || 'Desconocido',
+        species: analysisData.common_name || 'Especie',
+        scientificName: analysisData.scientific_name || '',
+        authorName: `@${displayName}`,
+        description: analysisData.description || 'Sin descripción disponible.',
+        location: locationData.label || 'Ubicación actual',
+        likes: '1k',
+        comments: '100',
+        dataUrl: pendingScan?.dataUrl || '',
+        fileName: pendingScan?.name || 'scan.jpg',
+        mediaType: 'photo',
+        analysis: analysisData,
+        locationData,
+      }
+    : null;
+  const previewCard = draft ? buildPublicationCardFromDraft(draft, authSession) : null;
 
   useEffect(() => {
     const authSession = getMockAuth();
@@ -109,69 +127,12 @@ function AnalysisPage() {
     };
   }, [pendingScan]);
 
-  const handlePublish = async () => {
-    if (!pendingScan || !analysisData) return;
+  const handleGoToPublication = () => {
+    if (!draft) return;
 
-    setIsPublishing(true);
-    setPublishError('');
-
-    const authSession = getMockAuth();
-    const displayName = authSession?.displayName || 'usuario';
-
-    try {
-      const imageFile = dataUrlToFile(pendingScan.dataUrl, pendingScan.name || 'scan.jpg');
-      const formData = new FormData();
-      formData.append('file', imageFile);
-      formData.append('user_id', authSession?.userId || authSession?.id || authSession?.email || 'anonymous');
-      formData.append('user_email', authSession?.email || '');
-      formData.append('display_name', displayName);
-      formData.append('common_name', analysisData.common_name || 'Desconocido');
-      formData.append('scientific_name', analysisData.scientific_name || '');
-      formData.append('description', analysisData.description || 'Sin descripción disponible.');
-      formData.append('confidence_score', String(analysisData.confidence_score ?? 0));
-      formData.append('category', analysisData.category || 'unknown');
-      formData.append('media_type', 'photo');
-      formData.append('location_label', locationData.label || 'Ubicación actual');
-      formData.append('latitude', locationData.latitude ?? '');
-      formData.append('longitude', locationData.longitude ?? '');
-      formData.append('is_public', 'true');
-
-      const sessionResult = await supabase.auth.getSession();
-      const accessToken = sessionResult.data?.session?.access_token;
-
-      const response = await fetch(apiUrl('/publications'), {
-        method: 'POST',
-        headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error('No se pudo publicar la observación.');
-      }
-
-      await response.json();
-      clearPendingScan();
-      navigate('/', { replace: true });
-    } catch (error) {
-      setPublishError(error?.message || 'No se pudo publicar.');
-      savePublishedCard({
-        id: `scan-${analysisData.id || Date.now()}`,
-        name: analysisData.common_name || 'Desconocido',
-        species: analysisData.common_name || 'Especie',
-        scientificName: analysisData.scientific_name || '',
-        authorName: `@${displayName}`,
-        avatarLabel: displayName.slice(0, 2).toUpperCase(),
-        description: analysisData.description || 'Sin descripción disponible.',
-        location: locationData.label || analysisData.scientific_name || 'Análisis completado',
-        likes: '1k',
-        comments: '100',
-        image: pendingScan.dataUrl,
-      });
-      clearPendingScan();
-      navigate('/', { replace: true });
-    } finally {
-      setIsPublishing(false);
-    }
+    savePendingPublicationDraft(draft);
+    clearPendingScan();
+    navigate('/publicacion?draft=1', { replace: true });
   };
 
   const handleKeepPrivate = () => {
@@ -257,16 +218,13 @@ function AnalysisPage() {
               <div>
                 <h2 className="text-lg font-bold text-black">Análisis listo</h2>
                 <p className="mt-1 text-sm leading-6 text-neutral-600">
-                  La IA terminó de recolectar la información. Revisa el resultado y decide si quieres subirlo al home.
+                  La IA terminó de recolectar la información. Revisa la tarjeta antes de publicar.
                 </p>
               </div>
             </div>
 
-            <div className="rounded-[22px] bg-white p-4 shadow-[0_12px_30px_rgba(0,0,0,0.06)]">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#80902e]">Resultado</p>
-              <h3 className="mt-2 text-xl font-black text-black">{analysisData.common_name || 'Desconocido'}</h3>
-              <p className="mt-1 text-sm font-medium text-neutral-500">{analysisData.scientific_name || 'Sin nombre científico'}</p>
-              <p className="mt-3 text-sm leading-6 text-neutral-700">{analysisData.description}</p>
+            <div className="h-[520px] w-full">
+              {previewCard ? <PublicationFlipCard card={previewCard} /> : null}
             </div>
 
             <div className="grid grid-cols-2 gap-3 pt-1">
@@ -279,16 +237,13 @@ function AnalysisPage() {
               </button>
               <button
                 type="button"
-                onClick={handlePublish}
-                disabled={isPublishing}
+                onClick={handleGoToPublication}
                 className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-[#80902e] px-4 text-sm font-semibold text-white shadow-[0_12px_24px_rgba(128,144,46,0.28)]"
               >
                 <Upload size={16} />
-                {isPublishing ? 'Publicando...' : 'Subir al home'}
+                Ir a publicación
               </button>
             </div>
-
-            {publishError ? <p className="text-sm font-medium text-red-600">{publishError}</p> : null}
           </div>
         ) : null}
       </div>

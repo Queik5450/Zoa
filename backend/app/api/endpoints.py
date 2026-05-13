@@ -54,6 +54,7 @@ def _shape_publication(row: Dict[str, Any]) -> Dict[str, Any]:
     avatar_label = (display_name[:2] or "ZO").upper()
 
     return {
+
         "id": row.get("id"),
         "name": row.get("common_name") or row.get("species_name") or "Desconocido",
         "species": row.get("common_name") or row.get("species_name") or "Especie",
@@ -260,6 +261,10 @@ async def create_publication(
         "id": publication_id,
         "species_id": species_id,
         "location_id": location_id,
+        "user_id": user_id,
+        "display_name": display_name,
+        "location_label": location_label,
+        "created_at": publication_payload["created_at"],
         "media_url": public_url,
         "storage_path": storage_path,
         "media_type": media_type,
