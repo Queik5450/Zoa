@@ -2,6 +2,7 @@ const PENDING_SCAN_KEY = 'zoa.pendingScan';
 const PUBLISHED_CARDS_KEY = 'zoa.publishedCards';
 const LOCAL_GALLERY_KEY = 'zoa.localGallery';
 const MOCK_AUTH_KEY = 'zoa.mockAuth';
+let pendingScanMemory = null;
 
 function readJson(key, fallbackValue) {
   try {
@@ -56,14 +57,21 @@ export function clearMockAuth() {
 }
 
 export function savePendingScan(scanData) {
-  writeJson(PENDING_SCAN_KEY, scanData);
+  pendingScanMemory = scanData;
+
+  try {
+    writeJson(PENDING_SCAN_KEY, scanData);
+  } catch {
+    // Fallback to memory for large camera photos that exceed localStorage quota.
+  }
 }
 
 export function getPendingScan() {
-  return readJson(PENDING_SCAN_KEY, null);
+  return readJson(PENDING_SCAN_KEY, pendingScanMemory);
 }
 
 export function clearPendingScan() {
+  pendingScanMemory = null;
   window.localStorage.removeItem(PENDING_SCAN_KEY);
 }
 
