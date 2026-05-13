@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import camaraSvg from '../assets/icons/camara.svg?raw';
 import homeSvg from '../assets/icons/home.svg?raw';
 import perfilSvg from '../assets/icons/perfil.svg?raw';
 import mapaSvg from '../assets/icons/mapa.svg?raw';
 import miZoologicoSvg from '../assets/icons/Book.svg?raw';
+import { fileToDataUrl, savePendingScan } from '../lib/scanFlow';
 
 const ACCENT = '#96b232'; // Aproximado al verde oscuro de la imagen
 const MUTED = '#7B7B7B';
@@ -50,6 +51,7 @@ function NavItem({ active, svgRaw, label, onClick }) {
 function BottomNav() {
   const navigate = useNavigate();
   const location = useLocation();
+  const fileInputRef = useRef(null);
   const path = location.pathname;
 
   const isHome = path === '/' || path === '';
@@ -83,11 +85,34 @@ function BottomNav() {
       </div>
 
       <div className="absolute bottom-[22px] left-1/2 z-30 -translate-x-1/2 rounded-full bg-white p-1">
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          className="hidden"
+          onChange={async (event) => {
+            const file = event.target.files?.[0];
+            if (!file) return;
+
+            try {
+              const dataUrl = await fileToDataUrl(file);
+              savePendingScan({ name: file.name, dataUrl });
+              navigate('/analysis');
+            } catch (error) {
+              console.error('Error al procesar la imagen:', error);
+            } finally {
+              if (fileInputRef.current) {
+                fileInputRef.current.value = '';
+              }
+            }
+          }}
+        />
         <button
           type="button"
-          onClick={() => navigate('/publicacion')}
+          onClick={() => fileInputRef.current?.click()}
           className="flex h-[68px] w-[68px] items-center justify-center rounded-full border-0 bg-[#96b232] shadow-[0_8px_16px_rgba(0,0,0,0.3)] outline-none transition-transform active:scale-95"
-          aria-label="Abrir página de publicación"
+          aria-label="Abrir cámara o explorador"
         >
           <span
             className="flex h-9 w-9 items-center justify-center [&>svg]:h-full [&>svg]:w-full"
