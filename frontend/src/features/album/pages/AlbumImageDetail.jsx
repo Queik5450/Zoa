@@ -9,50 +9,52 @@ function AlbumImageDetail() {
   const { id } = useParams();
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-[#eef3f8] pb-4">
-      <div className="px-4 pb-2 pt-1">
-        <h2 className="text-xl font-black text-black">Nombre Imagen</h2>
-        <p className="mt-1 text-xs font-medium text-neutral-500">
-          fecha: mayo 09/2026 <span className="mx-2">·</span> hora: 4:43pm
-        </p>
-      </div>
-
-      <div className="px-3">
-        <div className="overflow-hidden rounded-2xl shadow-lg">
-          <img
-            src="https://images.unsplash.com/photo-1583212292454-1fe6229606b2?auto=format&fit=crop&w=900&q=80"
-            alt=""
-            className="aspect-[4/5] w-full object-cover"
-          />
+    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-[#edf7f9] pb-[calc(var(--zoa-bottom-height)+16px)]">
+      <div className="px-4 pb-2 pt-2">
+        <h2 className="text-[35px] font-bold leading-[1] text-black">Nombre Imagen</h2>
+        <div className="mt-1 flex gap-4 text-[10px] font-semibold text-[#7b7b7b]">
+          <span>fecha: mayo 09/2026</span>
+          <span>hora: 4:43pm</span>
         </div>
       </div>
 
-      <div className="mt-4 px-4">
-        <p className="flex items-center gap-1 text-sm font-medium text-neutral-500">
+      <div className="px-0">
+        <img
+          src="https://images.unsplash.com/photo-1583212292454-1fe6229606b2?auto=format&fit=crop&w=900&q=80"
+          alt="Imagen del registro"
+          className="h-[298px] w-full object-cover"
+        />
+      </div>
+
+      <section className="relative mt-0 bg-white px-4 pb-10 pt-5 shadow-[0_4px_4px_rgba(0,0,0,0.25)]">
+        <p className="flex items-center gap-1 text-[15px] font-semibold text-[#707070]">
           <MapPin className="h-4 w-4 text-red-500" />
           Localizado en:
         </p>
-        <p className="mt-1 text-lg font-bold text-neutral-800">Parque Nacional Canaima</p>
-      </div>
+        <h3 className="mt-1 text-[25px] font-semibold leading-tight text-black">Parque Nacional Canaima</h3>
 
-      <div className="relative mx-3 mt-4 h-48 overflow-hidden rounded-2xl">
-        <img src={MAP_IMG} alt="" className="h-full w-full object-cover" />
-        <div className="absolute left-1/2 top-3 z-10 -translate-x-1/2">
+        <div className="absolute left-1/2 top-full -mt-5 -translate-x-1/2">
           <button
             type="button"
-            className="flex items-center gap-2 rounded-full bg-[#c1e14f] px-4 py-2 text-xs font-bold text-white shadow-md"
+            className="flex items-center gap-2 rounded-[10px] bg-[#9cb930] px-4 py-2 text-base font-semibold text-white shadow-[0_4px_4px_rgba(0,0,0,0.25)]"
           >
             Ver En Realidad Aumentada
-            <Play className="h-4 w-4 fill-white" />
+            <Play className="h-5 w-5 fill-white" />
           </button>
         </div>
-        <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 items-center gap-1 rounded-full bg-white/95 px-2 py-1 text-xs font-bold text-red-600 shadow">
-          <MapPin className="h-4 w-4" />
-          Parque Nacional Canaima
+      </section>
+
+      <div className="relative mx-3 mt-8 overflow-hidden rounded-2xl shadow-[0_4px_10px_rgba(0,0,0,0.35)]">
+        <img src={MAP_IMG} alt="Mapa de ubicación" className="h-52 w-full object-cover" />
+        <div className="absolute inset-x-0 bottom-3 flex justify-center">
+          <div className="flex items-center gap-1 rounded-full bg-white/95 px-3 py-1 text-[11px] font-semibold text-red-600">
+            <MapPin className="h-4 w-4" />
+            Parque Nacional Canaima
+          </div>
         </div>
       </div>
 
-      <p className="mt-3 px-4 text-center text-[10px] text-neutral-400">id: {id}</p>
+      <p className="mt-3 px-4 text-center text-[10px] font-semibold text-[#7b7b7b]">id: {id}</p>
     </div>
   );
 }
