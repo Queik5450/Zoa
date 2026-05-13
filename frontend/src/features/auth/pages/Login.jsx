@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Header from '../../../shared/components/Header';
-import { hydrateMockAuthFromSession, signInWithGoogle } from '../../../shared/lib/auth';
-import { supabase } from '../../../shared/lib/supabaseClient';
+import { hydrateMockAuthFromSession } from '../../../shared/lib/auth';
+import { supabase, isSupabaseConfigured } from '../../../shared/lib/supabaseClient';
+import { apiJson } from '../../../shared/lib/api';
 import { getPendingPublicationDraft, publishPendingPublicationDraft, savePendingPublicationDraft } from '../../../shared/lib/publicationDraft';
 import { getAuthCooldownRemainingMs, startAuthRateLimit } from '../../../shared/lib/authRateLimit';
 
@@ -15,6 +16,7 @@ function Login() {
   const [passwordError, setPasswordError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [rateLimitRemainingMs, setRateLimitRemainingMs] = useState(() => getAuthCooldownRemainingMs());
+  const [resolvedEmail, setResolvedEmail] = useState('');
 
   React.useEffect(() => {
     if (rateLimitRemainingMs <= 0) return undefined;
@@ -41,7 +43,8 @@ function Login() {
       return slug ? `${slug}@zoa.local` : '';
     };
 
-    const emailValue = buildLoginEmail(username);
+    let emailValue = buildLoginEmail(username);
+    setResolvedEmail('');
     const cooldownRemaining = getAuthCooldownRemainingMs();
 
     if (cooldownRemaining > 0) {
@@ -65,7 +68,22 @@ function Login() {
       return;
     }
 
-    // Validate generated email format
+    // If user provided a username (no @), try resolving to an existing profile email first
+    if (!username.includes('@')) {
+      try {
+        const resolveRes = await apiJson(`/profiles/resolve?username=${encodeURIComponent(username.trim())}`);
+        if (resolveRes?.found && resolveRes?.email) {
+          emailValue = resolveRes.email;
+          setResolvedEmail(resolveRes.email);
+        }
+      } catch (err) {
+        // ignore resolve errors and fallback to generated local email
+        // eslint-disable-next-line no-console
+        console.warn('profiles.resolve failed', err);
+      }
+    }
+
+    // Validate final email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailValue || !emailRegex.test(emailValue)) {
       setSubmitError('Nombre de usuario o correo inválido. Usa un correo válido o un username sin caracteres especiales.');
@@ -76,13 +94,25 @@ function Login() {
     setSubmitError('');
 
     try {
-      const authResult = await supabase.auth.signInWithPassword({
-        email: emailValue,
-        password,
-      });
+
+      if (!isSupabaseConfigured) {
+        setSubmitError('El cliente de Supabase no está configurado. Revisa las variables de entorno.');
+        return;
+      }
+
+      // Log request info (never log raw password)
+      // eslint-disable-next-line no-console
+      console.log('Signing in with', { email: emailValue, passwordLength: password.length });
+
+      const authResult = await supabase.auth.signInWithPassword({ email: emailValue, password });
 
       if (authResult.error) {
-        throw authResult.error;
+        // Prefer Supabase error message, but include status if available
+        const err = authResult.error;
+        const errMsg = err.message || err.error_description || JSON.stringify(err);
+        const status = err.status || err.statusCode || (err.response && err.response.status);
+        const display = status ? `${errMsg} (status ${status})` : errMsg;
+        throw new Error(display);
       }
 
       const user = authResult.data?.user;
@@ -116,17 +146,7 @@ function Login() {
     }
   };
 
-  const handleGoogleLogin = async () => {
-    setSubmitError('');
-    setIsSubmitting(true);
-
-    try {
-      await signInWithGoogle('/login');
-    } catch (error) {
-      setSubmitError(error?.message || 'No se pudo iniciar sesión con Google.');
-      setIsSubmitting(false);
-    }
-  };
+  // Google OAuth login removed — button disabled due to non-working provider.
 
   return (
     <div className="flex min-h-[100dvh] flex-col bg-white font-sans text-[#111]">
@@ -148,14 +168,7 @@ function Login() {
           className="mt-12 w-full max-w-[360px] rounded-[20px] bg-[#7f962b] px-0 pb-[24px] pt-5 shadow-[0_4px_4px_rgba(0,0,0,0.25)] sm:mt-[84px] sm:pb-[31px] sm:pt-6"
         >
           <div className="mx-auto flex w-full max-w-[320px] flex-col gap-3 px-4 text-white sm:px-0">
-            <button
-              type="button"
-              onClick={handleGoogleLogin}
-              disabled={isSubmitting}
-              className="rounded-lg bg-white py-2 text-center text-[14px] font-semibold text-[#1e1e1e] shadow-[0px_4px_4px_rgba(0,_0,_0,_0.25)] disabled:opacity-70 sm:text-[15px]"
-            >
-              Continuar con Google
-            </button>
+            {/* Google login removed — use email/username and password */}
 
             <div className="flex flex-col gap-[3px]">
               <label className="text-left text-[14px] sm:text-[15px]">Username o correo electronico</label>
@@ -173,7 +186,12 @@ function Login() {
               {usernameError ? (
                 <p className="text-sm font-medium text-red-600">{usernameError}</p>
               ) : (
-                <p className="text-xs text-white/90">Puedes usar correo o username. Los espacios se convertirán en puntos y se eliminarán caracteres especiales. Ej: José Pereira → jose.pereira@zoa.local</p>
+                <>
+                  <p className="text-xs text-white/90">Puedes usar correo o username. Los espacios se convertirán en puntos y se eliminarán caracteres especiales. Ej: José Pereira → jose.pereira@zoa.local</p>
+                  {resolvedEmail ? (
+                    <p className="text-sm text-white/100">Se intentará iniciar sesión con: <span className="font-medium">{resolvedEmail}</span></p>
+                  ) : null}
+                </>
               )}
             </div>
 

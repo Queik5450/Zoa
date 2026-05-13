@@ -208,6 +208,58 @@ def profile_exists(email: str):
     return {"exists": exists}
 
 
+@router.get("/profiles/resolve")
+def resolve_profile(username: str):
+    q = (username or "").strip()
+    if not q:
+        return {"found": False}
+
+    normalized_email = q.lower()
+
+    # 1) try exact email match
+    resp = _safe_query(
+        supabase.table(PROFILE_TABLE).select("email,display_name").eq("email", normalized_email).limit(1)
+    )
+    if resp and resp.data:
+        row = resp.data[0]
+        return {"found": True, "email": row.get("email"), "display_name": row.get("display_name")}
+
+    # 2) try exact display_name match
+    resp = _safe_query(
+        supabase.table(PROFILE_TABLE).select("email,display_name").eq("display_name", q).limit(1)
+    )
+    if resp and resp.data:
+        row = resp.data[0]
+        return {"found": True, "email": row.get("email"), "display_name": row.get("display_name")}
+
+    # 3) try partial (case-insensitive) display_name match
+    try:
+        resp = _safe_query(
+            supabase.table(PROFILE_TABLE).select("email,display_name").ilike("display_name", f"%{q}%").limit(1)
+        )
+        if resp and resp.data:
+            row = resp.data[0]
+            return {"found": True, "email": row.get("email"), "display_name": row.get("display_name")}
+    except Exception:
+        # some clients may not support ilike; ignore
+        pass
+
+    # 4) try matching by local-part of email
+    local = q.split("@")[0]
+    if local:
+        try:
+            resp = _safe_query(
+                supabase.table(PROFILE_TABLE).select("email,display_name").ilike("email", f"%{local}%").limit(1)
+            )
+            if resp and resp.data:
+                row = resp.data[0]
+                return {"found": True, "email": row.get("email"), "display_name": row.get("display_name")}
+        except Exception:
+            pass
+
+    return {"found": False}
+
+
 @router.post("/publications")
 async def create_publication(
     file: UploadFile = File(...),
