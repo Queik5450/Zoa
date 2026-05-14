@@ -141,7 +141,7 @@ function Map() {
         </div>
       </form>
 
-      <div className="relative z-10 mt-3 min-h-[42dvh] flex-[1.15] overflow-hidden rounded-[30px] border border-white/70 bg-white shadow-[0_18px_42px_rgba(0,0,0,0.14)] sm:min-h-[48dvh]">
+      <div className="relative z-10 mt-3 min-h-[42dvh] flex-[1.15] overflow-hidden rounded-[30px] border border-white/70 bg-[#e8eaec] shadow-[0_18px_42px_rgba(0,0,0,0.14)] sm:min-h-[48dvh]">
         {isLoading ? (
           <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/80 text-sm font-semibold text-neutral-700 backdrop-blur-sm">
             Cargando mapa...
@@ -154,27 +154,29 @@ function Map() {
           </div>
         ) : null}
 
-        <MapContainer center={DEFAULT_CENTER} zoom={5} className="h-full w-full">
-          <TileLayer
-            attribution='&copy; OpenStreetMap contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-          <AutoFitBounds points={visiblePins.filter((item) => Number.isFinite(item.latitude) && Number.isFinite(item.longitude))} />
-          {visiblePins
-            .filter((item) => Number.isFinite(item.latitude) && Number.isFinite(item.longitude))
-            .map((pin) => (
-              <Marker key={pin.id} position={[pin.latitude, pin.longitude]}>
-                <Popup>
-                  <div className="max-w-[220px] space-y-1">
-                    <p className="text-sm font-bold text-black">{pin.name || 'Publicación'}</p>
-                    <p className="text-xs text-neutral-600">{pin.scientificName || pin.species || 'Sin especie'}</p>
-                    <p className="text-xs text-neutral-600">{pin.location || 'Sin ubicación'}</p>
-                    <p className="text-xs text-neutral-500">{pin.authorName || 'Usuario'}</p>
-                  </div>
-                </Popup>
-              </Marker>
-            ))}
-        </MapContainer>
+        {hasMapResults ? (
+          <MapContainer center={DEFAULT_CENTER} zoom={5} className="h-full w-full">
+            <TileLayer
+              attribution='&copy; OpenStreetMap contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+            <AutoFitBounds points={visiblePins.filter((item) => Number.isFinite(item.latitude) && Number.isFinite(item.longitude))} />
+            {visiblePins
+              .filter((item) => Number.isFinite(item.latitude) && Number.isFinite(item.longitude))
+              .map((pin) => (
+                <Marker key={pin.id} position={[pin.latitude, pin.longitude]}>
+                  <Popup>
+                    <div className="max-w-[220px] space-y-1">
+                      <p className="text-sm font-bold text-black">{pin.name || 'Publicación'}</p>
+                      <p className="text-xs text-neutral-600">{pin.scientificName || pin.species || 'Sin especie'}</p>
+                      <p className="text-xs text-neutral-600">{pin.location || 'Sin ubicación'}</p>
+                      <p className="text-xs text-neutral-500">{pin.authorName || 'Usuario'}</p>
+                    </div>
+                  </Popup>
+                </Marker>
+              ))}
+          </MapContainer>
+        ) : null}
 
         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.02)_0%,rgba(255,255,255,0)_48%,rgba(0,0,0,0.06)_100%)]" />
       </div>

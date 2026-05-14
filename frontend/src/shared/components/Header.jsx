@@ -5,12 +5,12 @@ import logo from '../assets/icons/logo.png';
  * Cabecera "Parte arriba": imagen de fondo con el logo centrado.
  */
 function Header({ compact = false }) {
-  const headerHeightClass = compact ? 'h-[clamp(76px,16vw,104px)]' : 'h-[var(--zoa-header-height)]';
-  const logoHeightClass = compact ? 'h-[clamp(56px,14vw,92px)]' : 'h-[clamp(88px,24vw,136px)]';
+  const headerHeightClass = compact ? 'h-[clamp(96px,24vw,122px)]' : 'h-[var(--zoa-header-height)]';
+  const logoHeightClass = compact ? 'h-[clamp(38px,10vw,52px)]' : 'h-[clamp(42px,11vw,58px)]';
 
   return (
     <header className={`relative z-30 w-[100vw] shrink-0 [margin-left:calc(50%-50vw)] ${headerHeightClass}`}>
-      <div className="relative h-full w-full overflow-hidden shadow-[0_4px_16px_rgba(0,0,0,0.12)]">
+      <div className="relative h-full w-full overflow-hidden shadow-[0_6px_14px_rgba(0,0,0,0.14)]">
         <svg
           viewBox="0 0 406 89"
           preserveAspectRatio="none"
