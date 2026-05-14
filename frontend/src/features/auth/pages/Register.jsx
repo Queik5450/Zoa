@@ -12,7 +12,6 @@ function Register() {
   const navigate = useNavigate();
   const submitLockRef = useRef(false);
   const [email, setEmail] = useState('');
-  const [fullName, setFullName] = useState('');
   const [password, setPassword] = useState('');
   const [submitError, setSubmitError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -35,7 +34,7 @@ function Register() {
     }
 
     const normalizedEmail = (email || '').trim().toLowerCase();
-    const displayName = (fullName || normalizedEmail.split('@')[0] || 'usuario').trim();
+    const displayName = (normalizedEmail.split('@')[0] || 'usuario').trim();
     const cooldownRemaining = getAuthCooldownRemainingMs();
 
     if (cooldownRemaining > 0) {
@@ -141,16 +140,7 @@ function Register() {
               />
             </div>
 
-            <div className="flex flex-col gap-[3px]">
-              <label className="text-left text-[15px] sm:text-[16px]">Nombre</label>
-              <input
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                required
-                className="h-13 w-full rounded-xl bg-white px-4 text-[15px] text-black shadow-[0px_4px_4px_rgba(0,_0,_0,_0.25)] outline-none sm:h-14 sm:text-[16px]"
-                autoComplete="name"
-              />
-            </div>
+            {/* Nombre eliminado: se deriva del email si no se proporciona */}
 
             <div className="flex flex-col gap-[5px]">
               <label className="text-left text-[15px] sm:text-[16px]">

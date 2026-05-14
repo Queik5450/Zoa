@@ -1,9 +1,9 @@
 import React, { useRef, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import camaraSvg from './icons/camara.svg?raw';
-import homeSvg from './icons/home.svg?raw';
-import perfilSvg from './icons/perfil.svg?raw';
-import mapaSvg from './icons/mapa.svg?raw';
+import camaraSvg from '../shared/assets/icons/camara.svg?raw';
+import homeSvg from '../shared/assets/icons/home.svg?raw';
+import perfilSvg from '../shared/assets/icons/perfil.svg?raw';
+import busquedaSvg from '../shared/assets/icons/busqueda.svg?raw';
 import miAlbumIcon from '../shared/assets/icons/BookSelected.png';
 import { fileToDataUrl, savePendingScan } from '../shared/lib/scanFlow';
 
@@ -26,11 +26,12 @@ const cleanSvgColors = (svg, color) => {
 
 function NavItem({ active, svgRaw, iconSrc, label, onClick }) {
   const color = active ? ACCENT : MUTED;
+  const activeBg = active ? 'bg-white shadow-md ring-1 ring-[#e6f1c6]' : '';
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`appearance-none border-0 bg-transparent p-0 text-inherit outline-none relative flex flex-col items-center justify-center pt-2 transition-all hover:opacity-100 ${
+      className={`appearance-none border-0 bg-transparent p-0 text-inherit outline-none relative flex flex-col items-center justify-center pt-2 transition-all hover:opacity-100 hover:scale-105 hover:bg-white/20 hover:rounded-lg active:scale-95 ${activeBg} ${
         active ? 'opacity-100' : 'opacity-80 hover:text-green-500'
       }`}
     >
@@ -82,7 +83,7 @@ function BottomNav() {
       <div className="absolute inset-x-0 bottom-0 flex h-[calc(var(--zoa-bottom-height)-16px)] w-full items-end px-2 pb-1">
         <div className="flex w-[40%] items-end justify-around pr-1">
           <NavItem active={isHome} svgRaw={homeSvg} label="Inicio" onClick={() => navigate('/')} />
-          <NavItem active={isMap} svgRaw={mapaSvg} label="Mapa" onClick={() => navigate('/map')} />
+          <NavItem active={isMap} svgRaw={busquedaSvg} label="Busqueda" onClick={() => navigate('/map')} />
         </div>
         <div className="w-[20%]" />
         <div className="flex w-[40%] items-end justify-around pl-1">

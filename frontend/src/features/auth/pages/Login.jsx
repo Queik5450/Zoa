@@ -9,7 +9,6 @@ import { getPublicationDetailPath } from '../../../shared/lib/publicationRoutes'
 
 function Login() {
   const navigate = useNavigate();
-  const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitError, setSubmitError] = useState('');
@@ -31,18 +30,12 @@ function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const normalizedEmail = (email || '').trim().toLowerCase();
-    const displayName = (fullName || normalizedEmail.split('@')[0] || 'usuario').trim();
+    const displayName = (normalizedEmail.split('@')[0] || 'usuario').trim();
 
     const cooldownRemaining = getAuthCooldownRemainingMs();
     if (cooldownRemaining > 0) {
       setRateLimitRemainingMs(cooldownRemaining);
       setSubmitError(`Demasiadas solicitudes. Espera ${Math.ceil(cooldownRemaining / 1000)}s.`);
-      return;
-    }
-
-    // Basic validation
-    if (!fullName.trim()) {
-      setSubmitError('Por favor ingresa tu nombre.');
       return;
     }
 
@@ -119,17 +112,7 @@ function Login() {
             className="mt-8 w-full max-w-[430px] rounded-[28px] bg-[#7f962b] px-0 pb-7 pt-6 shadow-[0_12px_28px_rgba(0,0,0,0.18)] sm:mt-10 sm:pb-8 sm:pt-7"
           >
             <div className="mx-auto flex w-full max-w-[360px] flex-col gap-4 px-5 text-white sm:px-0">
-              <div className="flex flex-col gap-[3px]">
-                <label className="text-left text-[15px] sm:text-[16px]">Nombre</label>
-                <input
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  className="h-13 w-full rounded-xl bg-white px-4 text-[15px] text-black shadow-[0px_4px_4px_rgba(0,_0,_0,_0.25)] outline-none sm:h-14 sm:text-[16px]"
-                  placeholder="Tu nombre o usuario"
-                  autoComplete="name"
-                  required
-                />
-              </div>
+              {/* Nombre eliminado: no es obligatorio */}
 
               <div className="flex flex-col gap-[3px]">
                 <label className="text-left text-[15px] sm:text-[16px]">Correo electrónico</label>
