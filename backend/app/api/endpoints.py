@@ -39,6 +39,7 @@ class ProfileSyncRequest(BaseModel):
     email: Optional[str] = None
     display_name: Optional[str] = None
     avatar_url: Optional[str] = None
+    bio: Optional[str] = None
 
 
 def _now_iso() -> str:
@@ -151,12 +152,13 @@ def _create_location(location_label: Optional[str], latitude: Optional[float], l
     return location_id
 
 
-def _sync_profile(user_id: str, email: Optional[str], display_name: Optional[str], avatar_url: Optional[str] = None) -> Dict[str, Any]:
+def _sync_profile(user_id: str, email: Optional[str], display_name: Optional[str], avatar_url: Optional[str] = None, bio: Optional[str] = None) -> Dict[str, Any]:
     payload = {
         "id": user_id,
         "email": email,
         "display_name": display_name,
         "avatar_url": avatar_url,
+        "bio": bio,
         "updated_at": _now_iso(),
     }
     _safe_query(supabase.table(PROFILE_TABLE).upsert(payload))
@@ -257,7 +259,40 @@ async def analyze_species(file: UploadFile = File(...)):
 
 @router.post("/profiles/sync")
 def sync_profile(payload: ProfileSyncRequest):
-    return _sync_profile(payload.user_id, payload.email, payload.display_name, payload.avatar_url)
+    return _sync_profile(payload.user_id, payload.email, payload.display_name, payload.avatar_url, payload.bio)
+
+
+@router.get("/profiles/{user_id}")
+def get_profile(user_id: str):
+    resp = _safe_query(supabase.table(PROFILE_TABLE).select("id,email,display_name,avatar_url,bio,created_at,updated_at").eq("id", user_id).limit(1))
+    if resp and resp.data:
+        return resp.data[0]
+    return None
+
+
+@router.post("/profiles/{user_id}/avatar")
+async def upload_avatar(user_id: str, file: UploadFile = File(...)):
+    # store avatar in MEDIA_BUCKET under avatars/{user_id}/
+    file_bytes = await file.read()
+    file_extension = os.path.splitext(file.filename or "")[1] or ".jpg"
+    storage_path = f"avatars/{user_id}/avatar{file_extension}"
+
+    try:
+        upload_result = supabase.storage.from_(MEDIA_BUCKET).upload(storage_path, file_bytes)
+        try:
+            public_url = supabase.storage.from_(MEDIA_BUCKET).get_public_url(storage_path)
+        except Exception:
+            public_url = ''
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Storage upload failed: {exc}")
+
+    # update profile avatar_url
+    try:
+        _sync_profile(user_id, None, None, public_url)
+    except Exception:
+        pass
+
+    return {"avatar_url": public_url}
 
 
 @router.get("/profiles/exists")

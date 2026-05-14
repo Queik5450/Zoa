@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Play } from 'lucide-react';
 import { getMockAuth } from '../../../shared/lib/scanFlow';
-import { apiJson } from '../../../shared/lib/api';
+import { apiJson, apiUrl } from '../../../shared/lib/api';
 import PerfilUsuario from '../../../PerfilZoa/src/components/PerfilUsuario';
 import '../../../PerfilZoa/src/global.css';
 
@@ -27,6 +27,7 @@ function Profile() {
   });
   const [photoItems, setPhotoItems] = useState(FALLBACK_PHOTOS);
   const [audioItems, setAudioItems] = useState(FALLBACK_AUDIOS);
+  const [profile, setProfile] = useState(null);
 
   useEffect(() => {
     let isActive = true;
@@ -38,9 +39,10 @@ function Profile() {
 
     async function loadProfileData() {
       try {
-        const [statsData, publications] = await Promise.all([
+        const [statsData, publications, profileData] = await Promise.all([
           apiJson(`/users/${userId}/stats`),
           apiJson(`/publications/user/${userId}?limit=50`),
+          apiJson(`/profiles/${userId}`),
         ]);
 
         if (!isActive) return;
@@ -51,6 +53,17 @@ function Profile() {
             photos_total: statsData.photos_total ?? 0,
             audios_total: statsData.audios_total ?? 0,
             species_total: statsData.species_total ?? 0,
+          });
+        }
+
+        if (profileData) setProfile(profileData);
+        else if (!profileData && auth) {
+          // fallback to local mock auth so page renders on localhost without backend
+          setProfile({
+            display_name: auth.display_name || auth?.user?.name || auth?.email?.split('@')[0],
+            email: auth.email || '',
+            avatar_url: auth.avatar_url || null,
+            bio: auth.bio || '',
           });
         }
 
@@ -99,8 +112,50 @@ function Profile() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden bg-[#eef3f8] pb-24">
-      <div className="px-4 pt-5">
-        <PerfilUsuario />
+      <div className="px-3 pt-4 sm:px-4 md:px-6 lg:px-8 xl:px-10">
+        <PerfilUsuario
+          profile={profile}
+          stats={stats}
+          photos={photoItems}
+          audios={audioItems}
+          onSave={async (updated) => {
+            try {
+              await apiJson('/profiles/sync', {
+                method: 'POST',
+                body: {
+                  user_id: auth?.userId || auth?.id,
+                  display_name: updated.display_name,
+                  avatar_url: updated.avatar_url,
+                  bio: updated.bio,
+                },
+              });
+              const refreshed = await apiJson(`/profiles/${auth?.userId || auth?.id}`);
+              setProfile(refreshed);
+            } catch (err) {
+              console.error('Failed saving profile', err);
+            }
+          }}
+          onUploadAvatar={async (file) => {
+            const fd = new FormData();
+            fd.append('file', file);
+            const res = await fetch(apiUrl(`/profiles/${auth?.userId || auth?.id}/avatar`), { method: 'POST', body: fd });
+            // apiJson cannot be used for multipart easily here, use fetch
+            const json = await res.json();
+            if (json?.avatar_url) {
+              // sync profile with new avatar
+              await apiJson('/profiles/sync', {
+                method: 'POST',
+                body: {
+                  user_id: auth?.userId || auth?.id,
+                  avatar_url: json.avatar_url,
+                },
+              });
+              setProfile((p) => ({ ...(p || {}), avatar_url: json.avatar_url }));
+              return json.avatar_url;
+            }
+            return null;
+          }}
+        />
       </div>
     </div>
   );

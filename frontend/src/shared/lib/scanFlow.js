@@ -45,7 +45,29 @@ export function dataUrlToFile(dataUrl, fileName = 'scan.jpg') {
 }
 
 export function getMockAuth() {
-  return readJson(MOCK_AUTH_KEY, null);
+  const stored = readJson(MOCK_AUTH_KEY, null);
+  if (stored) return stored;
+
+  // If running on localhost, provide a sensible default dev user so the app
+  // renders as logged-in without extra setup.
+  try {
+    const host = window?.location?.hostname || '';
+    if (host === 'localhost' || host === '127.0.0.1') {
+      const devUser = {
+        id: '00000000-0000-0000-0000-000000000001',
+        userId: '00000000-0000-0000-0000-000000000001',
+        email: 'dev@localhost',
+        display_name: 'Usuario Local',
+      };
+      // persist so it's consistent across reloads
+      writeJson(MOCK_AUTH_KEY, devUser);
+      return devUser;
+    }
+  } catch {
+    // ignore and fall through
+  }
+
+  return null;
 }
 
 export function setMockAuth(authData) {

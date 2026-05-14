@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../../../shared/lib/supabaseClient';
 import PublicationFlipCard from '../../../shared/components/PublicationFlipCard';
 
@@ -90,7 +90,7 @@ function AlbumSpeciesDetail() {
   }, [speciesId]);
 
   const recordsCount = records.length;
-  const speciesTypeLabel = species?.category === 'flora' ? 'Planta' : 'Especie';
+  const navigate = useNavigate();
 
   const visibleRecords = useMemo(
     () =>
@@ -132,14 +132,10 @@ function AlbumSpeciesDetail() {
       <div className="px-4 pb-1 pt-2">
         <h2 className="text-[35px] font-bold leading-[1] text-black">{species?.common_name}</h2>
         <p className="mt-1 text-[15px] font-semibold text-black">Nombre Científico: {species?.scientific_name}</p>
-        <span className="mt-2 inline-flex rounded-[40px] bg-white px-4 py-[2px] text-[11px] font-semibold text-black shadow-[0_2px_4px_rgba(0,0,0,0.25)]">
-          {speciesTypeLabel}
-        </span>
       </div>
 
       <div className="px-4">
         <MoreText label="Descripción:" text={species?.description || 'Sin descripción disponible.'} />
-        <MoreText label="Habitat:" text={species?.description || 'Sin datos de habitat disponibles.'} />
       </div>
 
       <div className="h-px bg-[#b8b8b8]" />
@@ -148,12 +144,12 @@ function AlbumSpeciesDetail() {
       <div className="space-y-5 px-3">
         {visibleRecords.map((record) => (
           <div key={record.id} className="h-[520px] w-full">
-            <PublicationFlipCard card={record} />
+            <PublicationFlipCard card={record} onOpen={() => navigate(`/publicacion?id=${record.id}`)} />
           </div>
         ))}
       </div>
 
-      <p className="mt-4 px-4 text-center text-[10px] text-neutral-500">especie: {speciesId}</p>
+      
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Loader2, MapPin } from 'lucide-react';
 
-function PublicationFlipCard({ card, isScanning = false }) {
+function PublicationFlipCard({ card, isScanning = false, onOpen }) {
   const [isFlipped, setIsFlipped] = useState(false);
 
   const authorName = card?.authorName || '@usuario';
@@ -16,14 +16,24 @@ function PublicationFlipCard({ card, isScanning = false }) {
     <main className="relative z-0 mx-auto flex h-full min-h-0 w-full shrink-0 flex-col items-stretch justify-center">
       <div
         className="relative flex h-full min-h-0 w-full flex-col cursor-pointer"
-        onClick={() => setIsFlipped((current) => !current)}
+        onClick={() => {
+          if (typeof onOpen === 'function') {
+            onOpen();
+            return;
+          }
+          setIsFlipped((current) => !current);
+        }}
         style={{ perspective: '1000px' }}
         role="button"
         tabIndex={0}
         onKeyDown={(event) => {
           if (event.key === 'Enter' || event.key === ' ') {
             event.preventDefault();
-            setIsFlipped((current) => !current);
+            if (typeof onOpen === 'function') {
+              onOpen();
+            } else {
+              setIsFlipped((current) => !current);
+            }
           }
         }}
         aria-label="Ver detalles de la publicación"
@@ -78,11 +88,11 @@ function PublicationFlipCard({ card, isScanning = false }) {
                 <div className="mt-1 flex w-full items-end justify-between gap-3">
                   <div className="flex min-w-0 items-center gap-1 text-[13px] font-bold text-neutral-500">
                     <MapPin size={14} className="shrink-0 text-neutral-400" />
-                    <span className="truncate leading-none">{scientificLabel}</span>
+                    <span className="truncate leading-none">{locationLabel}</span>
                   </div>
 
                   <div className="text-[13px] font-bold text-neutral-500">
-                    <span className="truncate leading-none">{locationLabel}</span>
+                    <span className="truncate leading-none">{scientificLabel}</span>
                   </div>
                 </div>
               </div>

@@ -74,7 +74,12 @@ function AuthPage() {
     }
 
     const normalizedEmail = email.trim();
-    const displayName = (fullName || normalizedEmail.split('@')[0] || 'usuario').trim();
+    const displayName = (fullName || '').trim();
+
+    if (!displayName) {
+      setSubmitError('Por favor ingresa tu nombre.');
+      return;
+    }
     const cooldownRemaining = getAuthCooldownRemainingMs();
 
     if (cooldownRemaining > 0) {
@@ -169,7 +174,7 @@ function AuthPage() {
 
   return (
     <div className="flex min-h-[100dvh] flex-col bg-[#eef3f8] font-sans">
-      <Header />
+      <Header compact />
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-4 py-5">
         <button
           type="button"
@@ -217,6 +222,7 @@ function AuthPage() {
               onChange={(event) => setFullName(event.target.value)}
               type="text"
               placeholder="Tu nombre o usuario"
+              required
               className="h-12 w-full rounded-2xl border border-black/5 bg-white px-4 text-sm text-black shadow-[inset_0_2px_6px_rgba(0,0,0,0.06)] outline-none placeholder:text-neutral-400"
             />
           </div>

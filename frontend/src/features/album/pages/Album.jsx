@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronDown, Search } from 'lucide-react';
+import { savePendingPublicationDraft } from '../../../shared/lib/publicationDraft';
 import { supabase } from '../../../shared/lib/supabaseClient';
 
 function Album() {
@@ -156,7 +157,33 @@ function Album() {
         <div className="h-px bg-[#b8b8b8]" />
       </div>
 
-      <p className="shrink-0 px-1.5 pt-2 text-[13px] text-black">{countLabel}</p>
+      <div className="shrink-0 px-1.5 pt-2">
+        <p className="text-[13px] text-black">{countLabel}</p>
+        <div className="mt-2">
+          <button
+            type="button"
+            onClick={() => {
+              const sample = {
+                id: `sample-${Date.now()}`,
+                name: 'Perro doméstico (ejemplo)',
+                scientificName: 'Canis familiaris',
+                authorName: '@joseandrespereira2006',
+                description:
+                  'El animal en la imagen es un perro doméstico. Publicación de ejemplo para pruebas en el álbum.',
+                locationLabel: 'Ubicación actual',
+                image:
+                  'https://images.unsplash.com/photo-1518020382113-a7e8fc38eac9?auto=format&fit=crop&w=1200&q=80',
+                mediaType: 'photo',
+              };
+              savePendingPublicationDraft(sample);
+              navigate('/publicacion?draft=1');
+            }}
+            className="inline-flex items-center gap-2 rounded-full bg-[#80902e] px-3 py-1 text-sm font-semibold text-white"
+          >
+            Crear publicación de prueba
+          </button>
+        </div>
+      </div>
 
       <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain px-1.5 pb-[calc(var(--zoa-bottom-height)+52px)] pt-4">
         {isLoading ? <p className="px-2 text-sm text-neutral-600">Cargando...</p> : null}
