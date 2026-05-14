@@ -195,7 +195,7 @@ export const MOCK_HOME_CARDS = [
     location: 'Parque Nacional Canaima',
     likes: '1k',
     comments: '100',
-    image: 'https://picsum.photos/seed/zoaFlor/600/800',
+    image: 'https://media.admagazine.com/photos/663ab8194cc60b7bee3bfff7/1:1/w_2250,h_2250,c_limit/flor-de-mayo.jpg',
   },
   {
     id: 'home-mono-capuchino',
@@ -209,7 +209,7 @@ export const MOCK_HOME_CARDS = [
     location: 'Sierra de Lema',
     likes: '842',
     comments: '56',
-    image: 'https://picsum.photos/seed/zoaMonoHome/600/800',
+    image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTx5sp6Ens3J9MKoaeuPhqXlXFmlploUhyrDw&s',
   },
   {
     id: 'home-tucan',
@@ -223,7 +223,7 @@ export const MOCK_HOME_CARDS = [
     location: 'Delta Amacuro',
     likes: '1.2k',
     comments: '104',
-    image: 'https://picsum.photos/seed/zoaTucanHome/600/800',
+    image: 'https://storage.googleapis.com/media-cloud-na/2025/03/Keel-billed_toucan_costa_rica-scaled.jpg',
   },
   {
     id: 'home-jaguar',
@@ -237,7 +237,7 @@ export const MOCK_HOME_CARDS = [
     location: 'Canaima',
     likes: '2.4k',
     comments: '211',
-    image: 'https://picsum.photos/seed/zoaJaguarHome/600/800',
+    image: 'https://simec.conanp.gob.mx/imgs_fichas_monitoreo/20/fig1.jpg',
   },
   {
     id: 'home-orquidea',
@@ -251,7 +251,7 @@ export const MOCK_HOME_CARDS = [
     location: 'Puerto Ordaz',
     likes: '638',
     comments: '41',
-    image: 'https://picsum.photos/seed/zoaOrquideaHome/600/800',
+    image: 'https://www.viveroelencanto.com/wp-content/uploads/2023/06/360-ORQUIDEA-PHALEANOPSIS.jpg',
   },
   {
     id: 'home-heliconia',
@@ -265,7 +265,7 @@ export const MOCK_HOME_CARDS = [
     location: 'Bolívar',
     likes: '901',
     comments: '72',
-    image: 'https://picsum.photos/seed/zoaHeliconiaHome/600/800',
+    image: 'https://earthone.io/_next/image?url=https%3A%2F%2Fbs.plantnet.org%2Fimage%2Fo%2F264818171674d32c3ceb61931b3da31995e5bba1&w=3840&q=75',
   },
 ];
 
