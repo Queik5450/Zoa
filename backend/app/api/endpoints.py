@@ -10,7 +10,7 @@ from uuid import uuid4
 from fastapi import APIRouter, File, Form, UploadFile, HTTPException
 from pydantic import BaseModel
 
-from app.ai_services.vision import analyze_image_with_ai
+from app.ai_services.vision import analyze_audio_with_ai, analyze_image_with_ai
 from app.core.db import supabase
 
 router = APIRouter()
@@ -317,6 +317,21 @@ async def analyze_species(file: UploadFile = File(...)):
 
     img_bytes = await file.read()
     ai_result = analyze_image_with_ai(img_bytes)
+    return {
+        **ai_result,
+        "public_url": None,
+    }
+
+
+@router.post("/scan-audio", response_model=ScanResult)
+async def analyze_audio(file: UploadFile = File(...)):
+    """
+    Análisis IA de un audio subido.
+    Devuelve especie estimada + resumen para prellenar el draft de publicación.
+    """
+
+    audio_bytes = await file.read()
+    ai_result = analyze_audio_with_ai(audio_bytes, file.filename or "recording.webm")
     return {
         **ai_result,
         "public_url": None,

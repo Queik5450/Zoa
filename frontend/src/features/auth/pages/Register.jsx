@@ -6,6 +6,7 @@ import { supabase } from '../../../shared/lib/supabaseClient';
 import { getPendingPublicationDraft, publishPendingPublicationDraft, savePendingPublicationDraft } from '../../../shared/lib/publicationDraft';
 import { apiJson } from '../../../shared/lib/api';
 import { getAuthCooldownRemainingMs, startAuthRateLimit } from '../../../shared/lib/authRateLimit';
+import { getPublicationDetailPath } from '../../../shared/lib/publicationRoutes';
 
 function Register() {
   const navigate = useNavigate();
@@ -85,7 +86,7 @@ function Register() {
       if (pendingDraft) {
         savePendingPublicationDraft(pendingDraft);
         const published = await publishPendingPublicationDraft(pendingDraft);
-        navigate(`/publicacion?id=${published?.id || ''}`, { replace: true });
+        navigate(getPublicationDetailPath(published?.id || '', published?.media_type || pendingDraft?.mediaType), { replace: true });
         return;
       }
 

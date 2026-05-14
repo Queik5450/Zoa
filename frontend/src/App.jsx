@@ -12,6 +12,7 @@ import AlbumImageDetail from './features/album/pages/AlbumImageDetail';
 import AlbumAudioDetail from './features/album/pages/AlbumAudioDetail';
 import AlbumSpeciesDetail from './features/album/pages/AlbumSpeciesDetail';
 import Publicacion from './features/publicacion/pages/Publicacion';
+import PublicacionAudio from './features/publicacion/pages/PublicacionAudio';
 import Login from './features/auth/pages/Login';
 import Register from './features/auth/pages/Register';
 
@@ -23,6 +24,7 @@ function App() {
           <Route index element={<Home />} />
           <Route path="map" element={<Map />} />
           <Route path="publicacion" element={<Publicacion />} />
+          <Route path="publicacion-audio" element={<PublicacionAudio />} />
           <Route path="album/imagen/:id" element={<AlbumImageDetail />} />
           <Route path="album/audio/:id" element={<AlbumAudioDetail />} />
           <Route path="album/especie/:speciesId" element={<AlbumSpeciesDetail />} />

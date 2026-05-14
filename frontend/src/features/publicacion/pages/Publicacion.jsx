@@ -10,6 +10,7 @@ import {
   publishPendingPublicationDraft,
   savePendingPublicationDraft,
 } from '../../../shared/lib/publicationDraft';
+import { getDraftPublicationPath, getPublicationDetailPath } from '../../../shared/lib/publicationRoutes';
 
 const FALLBACK_MAP_IMAGE =
   'https://images.unsplash.com/photo-1569336415962-a056bdedbe8f?auto=format&fit=crop&w=1200&q=80';
@@ -39,6 +40,8 @@ function buildFallbackPublication(id) {
     publishedAt: null,
     locationLabel: 'Ubicación no disponible',
     mapImage: FALLBACK_MAP_IMAGE,
+    latitude: null,
+    longitude: null,
   };
 }
 
@@ -89,6 +92,11 @@ function Publicacion() {
 
         const draft = getPendingPublicationDraft();
         if (draft && (isDraftRoute || !publicationId)) {
+          if (draft.mediaType === 'audio') {
+            navigate(getDraftPublicationPath('audio'), { replace: true });
+            return;
+          }
+
           if (!isActive) return;
           setPendingDraft(draft);
           setPublication(normalizePublication(buildPublicationCardFromDraft(draft, getMockAuth()), draft?.id));
@@ -102,8 +110,14 @@ function Publicacion() {
             if (!isActive) return;
 
             if (publicationDetail) {
+              const normalized = normalizePublication(publicationDetail, publicationId);
+              if (normalized?.mediaType === 'audio') {
+                navigate(getPublicationDetailPath(normalized.id, 'audio'), { replace: true });
+                return;
+              }
+
               setPendingDraft(null);
-              setPublication(normalizePublication(publicationDetail, publicationId));
+              setPublication(normalized);
               setIsLoading(false);
               return;
             }
@@ -132,6 +146,11 @@ function Publicacion() {
           normalizePublication(galleryMatch, publicationId) ||
           buildFallbackPublication(publicationId);
 
+        if (nextPublication?.mediaType === 'audio') {
+          navigate(getPublicationDetailPath(nextPublication.id, 'audio'), { replace: true });
+          return;
+        }
+
         setPublication(nextPublication);
       } catch {
         if (!isActive) return;
@@ -148,7 +167,7 @@ function Publicacion() {
     return () => {
       isActive = false;
     };
-  }, [isDraftRoute, publicationId]);
+  }, [isDraftRoute, navigate, publicationId]);
 
   const card = useMemo(() => {
     if (!publication) return null;
@@ -164,13 +183,14 @@ function Publicacion() {
       likes: publication.likes || '0',
       comments: publication.comments || '0',
       image: publication.image || '',
-      mediaType: publication.mediaType || 'photo',
+      mediaType: 'photo',
       latitude: toCoordinate(publication.latitude),
       longitude: toCoordinate(publication.longitude),
     };
   }, [publication]);
 
   const isDraft = Boolean(pendingDraft || isDraftRoute);
+  const shown = card;
   const publishedAtLabel = publication?.publishedAt
     ? new Date(publication.publishedAt).toLocaleString('es-VE', {
         day: '2-digit',
@@ -185,38 +205,26 @@ function Publicacion() {
     <div className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(193,225,79,0.18),_transparent_40%),linear-gradient(180deg,_#f6f7f1_0%,_#eef2e8_100%)] px-4 py-4 sm:px-6 sm:py-6">
       <div className="pointer-events-none absolute inset-0 bg-black/10 backdrop-blur-[1px]" />
       <div className="relative w-full max-w-[460px] overflow-hidden rounded-[32px] border border-black/5 bg-white/95 shadow-[0_24px_56px_rgba(0,0,0,0.18)] backdrop-blur-xl mx-2 my-4 sm:mx-4">
-        {/* header title removed as requested */}
-
-        {isLoading ? (
+        {isLoading && (
           <div className="flex min-h-[420px] items-center justify-center rounded-[28px] border border-black/5 bg-[#f8faf4] text-center">
             <div>
               <Loader2 className="mx-auto mb-3 animate-spin text-[#c1e14f]" size={36} />
               <p className="text-sm font-semibold text-neutral-700">Cargando publicación...</p>
             </div>
           </div>
-        ) : null}
+        )}
 
-        {!isLoading && card ? (
+        {shown && (
           <div className="pb-4">
             <div className="px-4 pb-2 pt-1 sm:px-5">
-              <h2 className="text-[34px] font-black leading-[1.05] text-black">{card.name}</h2>
+              <h2 className="text-[34px] font-black leading-[1.05] text-black">{shown.name}</h2>
               <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-[10px] font-semibold text-[#7b7b7b]">
                 <span>fecha: {publishedAtLabel}</span>
               </div>
             </div>
 
             <div className="px-0">
-              {card.mediaType === 'audio' ? (
-                <div className="flex h-[298px] w-full items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(193,225,79,0.22),_transparent_38%),linear-gradient(180deg,_#2e3029_0%,_#151515_100%)] px-6 text-center text-white">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/70">Registro de audio</p>
-                    <p className="mt-2 text-2xl font-black leading-tight">{card.name}</p>
-                    <p className="mt-1 text-sm font-medium text-white/80">{card.scientificName || card.species}</p>
-                  </div>
-                </div>
-              ) : (
-                <img src={card.image} alt={card.name} className="h-[298px] w-full object-cover" />
-              )}
+              <img src={shown.image} alt={shown.name} className="h-[298px] w-full object-cover" />
             </div>
 
             <section className="relative bg-white px-4 pb-10 pt-5 shadow-[0_4px_4px_rgba(0,0,0,0.08)] sm:px-5">
@@ -224,30 +232,28 @@ function Publicacion() {
                 <MapPin className="h-4 w-4 text-red-500" />
                 Localizado en:
               </p>
-              <h3 className="mt-1 text-[25px] font-semibold leading-tight text-black">{card.location}</h3>
+              <h3 className="mt-1 text-[25px] font-semibold leading-tight text-black">{shown.location}</h3>
             </section>
 
             <div className="px-4 pt-6 sm:px-5">
               <div className="overflow-hidden rounded-2xl shadow-[0_4px_10px_rgba(0,0,0,0.2)]">
-                {Number.isFinite(card.latitude) && Number.isFinite(card.longitude) ? (
+                {Number.isFinite(shown?.latitude) && Number.isFinite(shown?.longitude) ? (
                   <iframe
                     title="Mapa de ubicación"
-                    src={`https://www.openstreetmap.org/export/embed.html?bbox=${card.longitude - 0.01}%2C${card.latitude - 0.01}%2C${card.longitude + 0.01}%2C${card.latitude + 0.01}&layer=mapnik&marker=${card.latitude}%2C${card.longitude}`}
+                    src={`https://www.openstreetmap.org/export/embed.html?bbox=${shown.longitude - 0.01}%2C${shown.latitude - 0.01}%2C${shown.longitude + 0.01}%2C${shown.latitude + 0.01}&layer=mapnik&marker=${shown.latitude}%2C${shown.longitude}`}
                     className="h-52 w-full border-0"
                     loading="lazy"
                   />
                 ) : (
                   <img src={publication?.mapImage || FALLBACK_MAP_IMAGE} alt="Mapa de ubicación" className="h-52 w-full object-cover" />
                 )}
-                <div className="absolute inset-x-0 bottom-auto top-[calc(100%-3.5rem)] hidden" />
-                {/* location badge removed */}
               </div>
             </div>
 
             <div className="px-4 pt-4 sm:px-5">
               <div className="rounded-[24px] border border-black/5 bg-[#f8faf4] p-4">
                 <h3 className="text-base font-bold text-black">Descripción</h3>
-                <p className="mt-2 text-sm leading-6 text-neutral-700">{card.description}</p>
+                <p className="mt-2 text-sm leading-6 text-neutral-700">{shown.description}</p>
               </div>
             </div>
 
@@ -257,10 +263,10 @@ function Publicacion() {
                 onClick={() => {
                   saveLocalGalleryItem({
                     id: publication?.id || `gallery-${Date.now()}`,
-                    name: card.name,
-                    image: card.image,
-                    scientificName: card.scientificName,
-                    location: card.location,
+                    name: shown.name,
+                    image: shown.image,
+                    scientificName: shown.scientificName,
+                    location: shown.location,
                     savedAt: Date.now(),
                   });
                 }}
@@ -288,7 +294,7 @@ function Publicacion() {
                     const published = await publishPendingPublicationDraft(pendingDraft);
                     clearPendingPublicationDraft();
                     setPendingDraft(null);
-                    navigate(`/publicacion?id=${published?.id || ''}`, { replace: true });
+                    navigate(getPublicationDetailPath(published?.id || '', published?.media_type), { replace: true });
                   } catch (error) {
                     setPublishError(error?.message || 'No se pudo publicar.');
                   } finally {
@@ -303,7 +309,7 @@ function Publicacion() {
 
             {publishError ? <p className="px-4 pt-3 text-sm font-medium text-red-600 sm:px-5">{publishError}</p> : null}
           </div>
-        ) : null}
+        )}
       </div>
     </div>
   );

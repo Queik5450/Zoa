@@ -1,11 +1,13 @@
-import React, { useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import camaraSvg from '../assets/icons/camara.svg?raw';
 import homeSvg from '../assets/icons/home.svg?raw';
 import perfilSvg from '../assets/icons/perfil.svg?raw';
 import mapaSvg from '../assets/icons/mapa.svg?raw';
 import miAlbumIcon from '../assets/icons/BookSelected.png';
-import { fileToDataUrl, savePendingScan } from '../lib/scanFlow';
+import { fileToDataUrl, savePendingAudio, savePendingScan } from '../lib/scanFlow';
+import { useRecorder } from '../lib/useRecorder';
+import { getDraftPublicationPath } from '../lib/publicationRoutes';
 
 const ACCENT = '#96b232'; // Aproximado al verde oscuro de la imagen
 const MUTED = '#7B7B7B';
@@ -70,11 +72,82 @@ function BottomNav() {
   const location = useLocation();
   const fileInputRef = useRef(null);
   const path = location.pathname;
+  const { isSupported: recorderSupported, isRecording, audioBlob, durationMs, startRecording, stopRecording } = useRecorder();
+  const [audioMessage, setAudioMessage] = useState('');
+  const [isSavingAudio, setIsSavingAudio] = useState(false);
 
   const isHome = path === '/' || path === '';
   const isMap = path.startsWith('/map');
   const isAlbum = path.startsWith('/album');
   const isProfile = path.startsWith('/profile');
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function persistAudio() {
+      if (!audioBlob) return;
+
+      setIsSavingAudio(true);
+      try {
+        const dataUrl = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = () => reject(new Error('No se pudo preparar el audio grabado.'));
+          reader.readAsDataURL(audioBlob);
+        });
+
+        if (cancelled) return;
+
+        savePendingAudio({
+          name: `audio-${Date.now()}.webm`,
+          dataUrl,
+          durationMs,
+          createdAt: Date.now(),
+        });
+        setAudioMessage('Audio listo');
+        // navigate to publication draft view so user can confirm and publish
+        try {
+          if (!path.startsWith('/publicacion-audio')) {
+            // use a short delay to let UI update before navigation
+            setTimeout(() => navigate(getDraftPublicationPath('audio')), 250);
+          }
+        } catch (e) {
+          // ignore navigation errors
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setAudioMessage(error?.message || 'No se pudo guardar el audio.');
+        }
+      } finally {
+        if (!cancelled) {
+          setIsSavingAudio(false);
+        }
+      }
+    }
+
+    persistAudio();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [audioBlob, durationMs]);
+
+  const toggleAudioRecording = async () => {
+    setAudioMessage('');
+
+    if (isRecording) {
+      stopRecording();
+      return;
+    }
+
+    const started = await startRecording();
+    if (!started) {
+      setAudioMessage('No se pudo abrir el micrófono.');
+    }
+  };
+
+  const audioLabel = isRecording ? 'Grabando' : audioBlob ? 'Audio listo' : 'Audio';
+  const audioDurationLabel = `${String(Math.floor(durationMs / 60000)).padStart(2, '0')}:${String(Math.floor((durationMs / 1000) % 60)).padStart(2, '0')}`;
 
   return (
     <div
@@ -102,6 +175,26 @@ function BottomNav() {
       </div>
 
       <div className="absolute bottom-[22px] left-1/2 z-30 -translate-x-1/2 rounded-full bg-white p-1">
+        <div className="absolute left-1/2 top-[-66px] -translate-x-1/2 rounded-full bg-white p-1 shadow-[0_10px_24px_rgba(0,0,0,0.14)]">
+          <button
+            type="button"
+            onClick={toggleAudioRecording}
+            disabled={!recorderSupported || isSavingAudio}
+            aria-label={isRecording ? 'Detener grabación de audio' : 'Grabar audio'}
+            className={`flex h-[56px] w-[56px] items-center justify-center rounded-full border-0 text-white shadow-[0_8px_16px_rgba(0,0,0,0.28)] outline-none transition-transform active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${isRecording ? 'bg-rose-600' : 'bg-[#80902e]'}`}
+          >
+            {isSavingAudio ? (
+              <span className="h-7 w-7 animate-spin rounded-full border-[3px] border-white/70 border-t-transparent" />
+            ) : isRecording ? (
+              <span className="h-3.5 w-3.5 rounded-full bg-white" />
+            ) : (
+              <span className="text-2xl leading-none">🎙</span>
+            )}
+          </button>
+        </div>
+        <div className="absolute left-1/2 top-[-92px] -translate-x-1/2 rounded-full bg-black/85 px-3 py-1 text-[10px] font-semibold text-white shadow-[0_8px_20px_rgba(0,0,0,0.2)]">
+          {audioMessage || `${audioLabel}${audioBlob ? ` · ${audioDurationLabel}` : ''}`}
+        </div>
         <input
           ref={fileInputRef}
           type="file"

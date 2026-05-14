@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../../../shared/lib/supabaseClient';
 import PublicationFlipCard from '../../../shared/components/PublicationFlipCard';
 import SpeechButton from '../../../shared/components/SpeechButton';
+import { getPublicationDetailPath } from '../../../shared/lib/publicationRoutes';
 
 const FALLBACK_MEDIA = 'https://1000marcas.net/wp-content/uploads/2025/04/Signo-de-interrogacion.png';
 
@@ -154,7 +155,7 @@ function AlbumSpeciesDetail() {
       <div className="space-y-5 px-3">
         {visibleRecords.map((record) => (
           <div key={record.id} className="h-[520px] w-full">
-            <PublicationFlipCard card={record} onOpen={() => navigate(`/publicacion?id=${record.id}`)} />
+            <PublicationFlipCard card={record} onOpen={() => navigate(getPublicationDetailPath(record.id, record.mediaType))} />
           </div>
         ))}
       </div>

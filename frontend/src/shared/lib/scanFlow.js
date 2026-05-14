@@ -1,8 +1,10 @@
 const PENDING_SCAN_KEY = 'zoa.pendingScan';
+const PENDING_AUDIO_KEY = 'zoa.pendingAudio';
 const PUBLISHED_CARDS_KEY = 'zoa.publishedCards';
 const LOCAL_GALLERY_KEY = 'zoa.localGallery';
 const MOCK_AUTH_KEY = 'zoa.mockAuth';
 let pendingScanMemory = null;
+let pendingAudioMemory = null;
 
 function readJson(key, fallbackValue) {
   try {
@@ -75,6 +77,25 @@ export function getPendingScan() {
 export function clearPendingScan() {
   pendingScanMemory = null;
   window.localStorage.removeItem(PENDING_SCAN_KEY);
+}
+
+export function savePendingAudio(audioData) {
+  pendingAudioMemory = audioData;
+
+  try {
+    writeJson(PENDING_AUDIO_KEY, audioData);
+  } catch {
+    // Fallback to memory for larger audio captures.
+  }
+}
+
+export function getPendingAudio() {
+  return readJson(PENDING_AUDIO_KEY, pendingAudioMemory);
+}
+
+export function clearPendingAudio() {
+  pendingAudioMemory = null;
+  window.localStorage.removeItem(PENDING_AUDIO_KEY);
 }
 
 export function getPublishedCards() {

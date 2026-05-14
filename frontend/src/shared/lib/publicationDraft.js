@@ -75,13 +75,14 @@ export async function publishPendingPublicationDraft(draft = null) {
 
   const analysis = currentDraft.analysis || {};
   const location = currentDraft.location || {};
-  const imageDataUrl = currentDraft.dataUrl || currentDraft.image;
+  const mediaDataUrl = currentDraft.dataUrl || currentDraft.image || currentDraft.audioUrl || currentDraft.dataUrl;
 
-  if (!imageDataUrl) {
-    throw new Error('No se encontró imagen para publicar.');
+  if (!mediaDataUrl) {
+    throw new Error('No se encontró archivo para publicar.');
   }
 
-  const imageFile = dataUrlToFile(imageDataUrl, currentDraft.fileName || 'scan.jpg');
+  const defaultFileName = (currentDraft.mediaType === 'audio') ? (currentDraft.fileName || 'recording.webm') : (currentDraft.fileName || 'scan.jpg');
+  const imageFile = dataUrlToFile(mediaDataUrl, defaultFileName);
   const formData = new FormData();
   formData.append('file', imageFile);
   // Idempotency: send client-generated publication id so backend can dedupe

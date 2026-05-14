@@ -1,19 +1,15 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Search, X } from 'lucide-react';
 import { apiJson } from '../../../shared/lib/api';
-import { MapContainer, Marker, Popup, useMap } from 'react-leaflet';
-import L from 'leaflet';
-import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
-import markerIcon from 'leaflet/dist/images/marker-icon.png';
-import markerShadow from 'leaflet/dist/images/marker-shadow.png';
-import 'leaflet/dist/leaflet.css';
+import { getPublicationDetailPath } from '../../../shared/lib/publicationRoutes';
+import { useNavigate } from 'react-router-dom';
 
 const DEFAULT_CENTER = [5.35, -62.2];
 const MAP_PAGE_SIZE = 100;
 const MAP_ENDPOINTS = ['/map/publications', '/publications/feed'];
 const MAP_REQUEST_TIMEOUT_MS = 15000;
-const SHOW_MAP_DEBUG = import.meta.env.DEV;
 const MAP_VIEW_BOX = { minLat: -90, maxLat: 90, minLng: -180, maxLng: 180 };
+
 
 function mergeUniquePublications(baseItems, incomingItems) {
   const merged = [...baseItems];
@@ -53,49 +49,6 @@ function normalizeSearchText(value) {
     .toLowerCase();
 }
 
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: markerIcon2x,
-  iconUrl: markerIcon,
-  shadowUrl: markerShadow,
-});
-
-function MapResizeFix({ deps }) {
-  const map = useMap();
-
-  useEffect(() => {
-    const frames = [];
-    const timeouts = [];
-
-    frames.push(
-      window.requestAnimationFrame(() => {
-        map.invalidateSize();
-      }),
-    );
-    frames.push(
-      window.requestAnimationFrame(() => {
-        map.invalidateSize();
-      }),
-    );
-    timeouts.push(
-      window.setTimeout(() => {
-        map.invalidateSize();
-      }, 250),
-    );
-    timeouts.push(
-      window.setTimeout(() => {
-        map.invalidateSize();
-      }, 750),
-    );
-
-    return () => {
-      frames.forEach((frame) => window.cancelAnimationFrame(frame));
-      timeouts.forEach((timeoutId) => window.clearTimeout(timeoutId));
-    };
-  }, [map, deps]);
-
-  return null;
-}
-
 function latLngToPercent(latitude, longitude) {
   const latRatio = (latitude - MAP_VIEW_BOX.minLat) / (MAP_VIEW_BOX.maxLat - MAP_VIEW_BOX.minLat);
   const lngRatio = (longitude - MAP_VIEW_BOX.minLng) / (MAP_VIEW_BOX.maxLng - MAP_VIEW_BOX.minLng);
@@ -111,6 +64,7 @@ function formatLocationLabel(latitude, longitude) {
 }
 
 function Map() {
+  const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [searchActive, setSearchActive] = useState(false);
   const [publications, setPublications] = useState([]);
@@ -118,7 +72,6 @@ function Map() {
   const [lastError, setLastError] = useState('');
   const [requestCount, setRequestCount] = useState(0);
   const [reloadNonce, setReloadNonce] = useState(0);
-  const [mapReady, setMapReady] = useState(false);
 
   useEffect(() => {
     let isActive = true;
@@ -272,10 +225,6 @@ function Map() {
     setSearchActive(false);
   };
 
-  useEffect(() => {
-    setMapReady(false);
-  }, [reloadNonce, mapPins.length]);
-
   const handleReload = () => {
     setLastError('');
     setIsLoading(true);
@@ -291,27 +240,7 @@ function Map() {
     <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-[#edf7f9] px-3 pb-[calc(var(--zoa-bottom-height)+12px)] pt-2 sm:px-4 sm:pb-[calc(var(--zoa-bottom-height)+16px)] sm:pt-3">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(193,225,79,0.14),transparent_34%),linear-gradient(180deg,rgba(255,255,255,0.54)_0%,rgba(237,247,249,0.15)_32%,rgba(237,247,249,0.68)_100%)]" />
 
-      {SHOW_MAP_DEBUG ? (
-        <div className="relative z-20 mb-2 rounded-2xl border border-black/10 bg-white/90 px-3 py-2 text-[11px] font-semibold text-neutral-700 shadow-[0_10px_24px_rgba(0,0,0,0.08)] backdrop-blur-sm">
-          <div className="flex items-center justify-between gap-2">
-            <div>
-              <div>loading: {isLoading ? 'yes' : 'no'}</div>
-              <div>requests: {requestCount}</div>
-              <div>publications: {publications.length}</div>
-              <div>mapPins: {mapPins.length}</div>
-              <div>mapReady: {mapReady ? 'yes' : 'no'}</div>
-              {lastError ? <div className="mt-1 break-words text-red-600">{lastError}</div> : null}
-            </div>
-            <button
-              type="button"
-              onClick={handleReload}
-              className="rounded-full border border-black/10 bg-[#f8faf4] px-3 py-1 text-[11px] font-bold text-black hover:bg-[#eef4df]"
-            >
-              Refetch
-            </button>
-          </div>
-        </div>
-      ) : null}
+      
 
       <form onSubmit={runSearch} className="relative z-10 shrink-0">
         <div className="flex items-center gap-2 rounded-[22px] border border-white/80 bg-white px-3 py-2.5 shadow-[0_10px_24px_rgba(0,0,0,0.10)]">
@@ -375,6 +304,11 @@ function Map() {
             if (latitude === null || longitude === null) return null;
 
             const position = latLngToPercent(latitude, longitude);
+            const publicationPath = getPublicationDetailPath(pin.id, pin.mediaType);
+
+            const openPublication = () => {
+              navigate(publicationPath);
+            };
 
             return (
               <div
@@ -382,27 +316,36 @@ function Map() {
                 className="absolute z-20 -translate-x-1/2 -translate-y-full"
                 style={position}
               >
-                <div className="relative flex flex-col items-center">
+                <button
+                  type="button"
+                  onClick={openPublication}
+                  onTouchEnd={openPublication}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      openPublication();
+                    }
+                  }}
+                  className="relative flex flex-col items-center outline-none"
+                  aria-label={`Abrir publicación ${pin.name || 'sin nombre'}`}
+                >
                   <span className="mb-1 rounded-full bg-black px-2 py-1 text-[11px] font-bold text-white shadow-[0_4px_12px_rgba(0,0,0,0.3)]">
                     {pin.mediaType === 'audio' ? 'Audio' : 'Punto'}
                   </span>
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full border-4 border-white bg-[#95a82b] text-lg text-white shadow-[0_10px_24px_rgba(0,0,0,0.28)]">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full border-4 border-white bg-[#95a82b] text-lg text-white shadow-[0_10px_24px_rgba(0,0,0,0.28)] transition-transform duration-150 hover:scale-105 active:scale-95">
                     {pin.mediaType === 'audio' ? '🎙' : '📍'}
                   </div>
                   <div className="mt-1 max-w-[130px] rounded-xl bg-white/95 px-3 py-2 text-center text-[10px] font-semibold leading-tight text-[#43501a] shadow-[0_8px_18px_rgba(0,0,0,0.18)]">
                     <div className="truncate">{pin.name || 'Publicación'}</div>
                     <div className="truncate text-[9px] font-medium text-neutral-600">{formatLocationLabel(latitude, longitude)}</div>
                   </div>
-                </div>
+                </button>
               </div>
             );
           })}
 
           <div className="absolute inset-x-0 bottom-0 h-24 bg-[linear-gradient(180deg,rgba(255,255,255,0)_0%,rgba(255,255,255,0.64)_100%)]" />
         </div>
-
-        {mapPins.length > 0 ? <MapContainer center={DEFAULT_CENTER} zoom={5} className="hidden" /> : null}
-
         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.02)_0%,rgba(255,255,255,0)_48%,rgba(0,0,0,0.06)_100%)]" />
       </div>
 
