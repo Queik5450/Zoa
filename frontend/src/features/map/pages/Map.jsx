@@ -10,6 +10,15 @@ import 'leaflet/dist/leaflet.css';
 
 const DEFAULT_CENTER = [5.35, -62.2];
 
+function toCoordinate(value) {
+  if (value === null || value === undefined || value === '') {
+    return null;
+  }
+
+  const numericValue = Number(value);
+  return Number.isFinite(numericValue) ? numericValue : null;
+}
+
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: markerIcon2x,
   iconUrl: markerIcon,
@@ -157,11 +166,11 @@ function Map() {
               attribution='&copy; OpenStreetMap contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
-            <AutoFitBounds points={visiblePins.filter((item) => Number.isFinite(item.latitude) && Number.isFinite(item.longitude))} />
+            <AutoFitBounds points={visiblePins.filter((item) => toCoordinate(item.latitude) !== null && toCoordinate(item.longitude) !== null)} />
             {visiblePins
-              .filter((item) => Number.isFinite(item.latitude) && Number.isFinite(item.longitude))
+              .filter((item) => toCoordinate(item.latitude) !== null && toCoordinate(item.longitude) !== null)
               .map((pin) => (
-                <Marker key={pin.id} position={[pin.latitude, pin.longitude]}>
+                <Marker key={pin.id} position={[toCoordinate(pin.latitude), toCoordinate(pin.longitude)]}>
                   <Popup>
                     <div className="max-w-[220px] space-y-1">
                       <p className="text-sm font-bold text-black">{pin.name || 'Publicación'}</p>

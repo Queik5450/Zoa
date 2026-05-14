@@ -14,6 +14,15 @@ import {
 const FALLBACK_MAP_IMAGE =
   'https://images.unsplash.com/photo-1569336415962-a056bdedbe8f?auto=format&fit=crop&w=1200&q=80';
 
+function toCoordinate(value) {
+  if (value === null || value === undefined || value === '') {
+    return null;
+  }
+
+  const numericValue = Number(value);
+  return Number.isFinite(numericValue) ? numericValue : null;
+}
+
 function buildFallbackPublication(id) {
   return {
     id: id || `publication-${Date.now()}`,
@@ -55,6 +64,8 @@ function normalizePublication(source, fallbackId) {
     publishedAt: source.publishedAt || source.created_at || null,
     locationLabel: location,
     mapImage: source.mapImage || FALLBACK_MAP_IMAGE,
+    latitude: toCoordinate(source.latitude),
+    longitude: toCoordinate(source.longitude),
   };
 }
 
@@ -83,6 +94,22 @@ function Publicacion() {
           setPublication(normalizePublication(buildPublicationCardFromDraft(draft, getMockAuth()), draft?.id));
           setIsLoading(false);
           return;
+        }
+
+        if (publicationId) {
+          try {
+            const publicationDetail = await apiJson(`/publications/${publicationId}`);
+            if (!isActive) return;
+
+            if (publicationDetail) {
+              setPendingDraft(null);
+              setPublication(normalizePublication(publicationDetail, publicationId));
+              setIsLoading(false);
+              return;
+            }
+          } catch {
+            // Fall through to feed/local gallery lookup.
+          }
         }
 
         const [feed, localGallery] = await Promise.all([
@@ -138,6 +165,8 @@ function Publicacion() {
       comments: publication.comments || '0',
       image: publication.image || '',
       mediaType: publication.mediaType || 'photo',
+      latitude: toCoordinate(publication.latitude),
+      longitude: toCoordinate(publication.longitude),
     };
   }, [publication]);
 
@@ -201,7 +230,16 @@ function Publicacion() {
 
             <div className="px-4 pt-6 sm:px-5">
               <div className="overflow-hidden rounded-2xl shadow-[0_4px_10px_rgba(0,0,0,0.2)]">
-                <img src={publication?.mapImage || FALLBACK_MAP_IMAGE} alt="Mapa de ubicación" className="h-52 w-full object-cover" />
+                {Number.isFinite(card.latitude) && Number.isFinite(card.longitude) ? (
+                  <iframe
+                    title="Mapa de ubicación"
+                    src={`https://www.openstreetmap.org/export/embed.html?bbox=${card.longitude - 0.01}%2C${card.latitude - 0.01}%2C${card.longitude + 0.01}%2C${card.latitude + 0.01}&layer=mapnik&marker=${card.latitude}%2C${card.longitude}`}
+                    className="h-52 w-full border-0"
+                    loading="lazy"
+                  />
+                ) : (
+                  <img src={publication?.mapImage || FALLBACK_MAP_IMAGE} alt="Mapa de ubicación" className="h-52 w-full object-cover" />
+                )}
                 <div className="absolute inset-x-0 bottom-auto top-[calc(100%-3.5rem)] hidden" />
                 {/* location badge removed */}
               </div>

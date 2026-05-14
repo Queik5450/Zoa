@@ -4,7 +4,6 @@ import camaraSvg from '../assets/icons/camara.svg?raw';
 import homeSvg from '../assets/icons/home.svg?raw';
 import perfilSvg from '../assets/icons/perfil.svg?raw';
 import mapaSvg from '../assets/icons/mapa.svg?raw';
-import miAlbumIcon from '../assets/icons/BookSelected.png';
 import { fileToDataUrl, savePendingScan } from '../lib/scanFlow';
 
 const ACCENT = '#96b232'; // Aproximado al verde oscuro de la imagen
@@ -96,7 +95,6 @@ function BottomNav() {
         </div>
         <div className="w-[20%]" />
         <div className="flex w-[40%] items-end justify-around pl-1">
-          <NavItem active={isAlbum} iconSrc={miAlbumIcon} label="Mi Album" onClick={() => navigate('/album')} />
           <NavItem active={isProfile} svgRaw={perfilSvg} label="Perfil" onClick={() => navigate('/profile')} />
         </div>
       </div>

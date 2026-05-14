@@ -46,6 +46,26 @@ def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def _to_float(value: Any) -> Optional[float]:
+    if value is None or value == "":
+        return None
+
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _format_coordinates(latitude: Any, longitude: Any) -> str:
+    lat = _to_float(latitude)
+    lon = _to_float(longitude)
+
+    if lat is None or lon is None:
+        return "Ubicación no disponible"
+
+    return f"Latitud {lat:.6f}, Longitud {lon:.6f}"
+
+
 def _safe_query(query):
     try:
         return query.execute()
@@ -58,6 +78,8 @@ def _safe_query(query):
 def _shape_publication(row: Dict[str, Any]) -> Dict[str, Any]:
     display_name = row.get("display_name") or row.get("user_email") or "usuario"
     avatar_label = (display_name[:2] or "ZO").upper()
+    latitude = _to_float(row.get("latitude"))
+    longitude = _to_float(row.get("longitude"))
 
     return {
 
@@ -68,7 +90,7 @@ def _shape_publication(row: Dict[str, Any]) -> Dict[str, Any]:
         "authorName": f"@{display_name}",
         "avatarLabel": avatar_label,
         "description": row.get("description") or "Sin descripción disponible.",
-        "location": row.get("location_label") or "Ubicación no disponible",
+        "location": _format_coordinates(latitude, longitude) if latitude is not None and longitude is not None else (row.get("location_label") or "Ubicación no disponible"),
         "likes": row.get("likes_count") or 0,
         "comments": row.get("comments_count") or 0,
         "image": row.get("media_url") or row.get("public_url") or "",
@@ -76,8 +98,8 @@ def _shape_publication(row: Dict[str, Any]) -> Dict[str, Any]:
         "userId": row.get("user_id"),
         "speciesId": row.get("species_id"),
         "locationId": row.get("location_id"),
-        "latitude": row.get("latitude"),
-        "longitude": row.get("longitude"),
+        "latitude": latitude,
+        "longitude": longitude,
         "category": row.get("category"),
         "publishedAt": row.get("created_at"),
     }
@@ -488,6 +510,25 @@ async def create_publication(
 @router.get("/publications/feed")
 def get_public_feed(limit: int = 50, page: int = 1, per_page: Optional[int] = None):
     return _fetch_publications({"is_public": True}, limit=limit, page=page, per_page=per_page, use_mat_view=True)
+
+
+@router.get("/publications/{publication_id}")
+def get_publication(publication_id: str):
+    try:
+        response = _safe_query(
+            supabase.table(PUBLICATION_TABLE)
+            .select(
+                "id, common_name, scientific_name, display_name, user_email, description, location_label, media_url, media_type, user_id, species_id, location_id, latitude, longitude, category, created_at"
+            )
+            .eq("id", publication_id)
+            .limit(1)
+        )
+        if response and response.data:
+            return _shape_publication(response.data[0])
+    except Exception as exc:
+        logging.warning("Publication detail query failed for id=%s: %s", publication_id, exc)
+
+    raise HTTPException(status_code=404, detail="Publication not found")
 
 
 @router.get("/publications/user/{user_id}")

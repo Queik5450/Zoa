@@ -13,6 +13,14 @@ import { buildPublicationCardFromDraft, savePendingPublicationDraft } from '../.
 
 const SCAN_ENDPOINT = 'https://zoa-5p6r.onrender.com/api/scan';
 
+function formatCoordinates(latitude, longitude) {
+  if (latitude === null || latitude === undefined || longitude === null || longitude === undefined) {
+    return 'Ubicación no disponible';
+  }
+
+  return `Latitud ${Number(latitude).toFixed(6)}, Longitud ${Number(longitude).toFixed(6)}`;
+}
+
 function AnalysisPage() {
   const navigate = useNavigate();
   const [pendingScan] = useState(() => getPendingScan());
@@ -20,7 +28,6 @@ function AnalysisPage() {
   const [analysisError, setAnalysisError] = useState('');
   const [analysisData, setAnalysisData] = useState(null);
   const [locationData, setLocationData] = useState({
-    label: 'Ubicación no disponible',
     latitude: null,
     longitude: null,
   });
@@ -68,14 +75,12 @@ function AnalysisPage() {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           setLocationData({
-            label: 'Ubicación actual',
             latitude: position.coords.latitude,
             longitude: position.coords.longitude,
           });
         },
         () => {
           setLocationData({
-            label: 'Ubicación no disponible',
             latitude: null,
             longitude: null,
           });
@@ -244,6 +249,11 @@ function AnalysisPage() {
                 <Upload size={16} />
                 Ir a publicación
               </button>
+            </div>
+
+            <div className="rounded-[24px] border border-black/5 bg-white p-4">
+              <h3 className="text-base font-bold text-black">Ubicación</h3>
+              <p className="mt-2 text-sm leading-6 text-neutral-700">{formatCoordinates(locationData.latitude, locationData.longitude)}</p>
             </div>
           </div>
         ) : null}

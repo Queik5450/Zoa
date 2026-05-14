@@ -4,6 +4,14 @@ import { supabase } from './supabaseClient';
 
 const PENDING_PUBLICATION_KEY = 'zoa.pendingPublication';
 
+function formatCoordinates(latitude, longitude) {
+  if (latitude === null || latitude === undefined || longitude === null || longitude === undefined) {
+    return 'Ubicación no disponible';
+  }
+
+  return `Latitud ${Number(latitude).toFixed(6)}, Longitud ${Number(longitude).toFixed(6)}`;
+}
+
 function readJson(key, fallbackValue) {
   try {
     const rawValue = window.localStorage.getItem(key);
@@ -36,6 +44,8 @@ export function buildPublicationCardFromDraft(draft, authSession = getMockAuth()
   const analysis = draft.analysis || {};
   const location = draft.location || {};
   const displayName = authSession?.displayName || draft.authorName?.replace(/^@/, '') || 'usuario';
+  const latitude = Number(location.latitude);
+  const longitude = Number(location.longitude);
 
   return {
     id: draft.id || analysis.id || `draft-${Date.now()}`,
@@ -44,7 +54,7 @@ export function buildPublicationCardFromDraft(draft, authSession = getMockAuth()
     scientificName: analysis.scientific_name || draft.scientificName || '',
     authorName: `@${displayName}`,
     description: analysis.description || draft.description || 'Sin descripción disponible.',
-    location: location.label || draft.locationLabel || 'Ubicación no disponible',
+    location: formatCoordinates(latitude, longitude),
     likes: draft.likes || '1k',
     comments: draft.comments || '100',
     image: draft.dataUrl || draft.image || '',
@@ -87,7 +97,7 @@ export async function publishPendingPublicationDraft(draft = null) {
   formData.append('confidence_score', String(analysis.confidence_score ?? 0));
   formData.append('category', analysis.category || currentDraft.category || 'unknown');
   formData.append('media_type', currentDraft.mediaType || 'photo');
-  formData.append('location_label', location.label || currentDraft.locationLabel || 'Ubicación actual');
+  formData.append('location_label', formatCoordinates(location.latitude, location.longitude));
   formData.append('latitude', location.latitude ?? '');
   formData.append('longitude', location.longitude ?? '');
   formData.append('is_public', 'true');
