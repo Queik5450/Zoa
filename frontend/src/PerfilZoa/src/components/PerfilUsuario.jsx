@@ -82,15 +82,15 @@ const PerfilUsuario = ({ profile = null, stats = {}, photos = [], audios = [], o
 
       <div className="grid grid-cols-3 gap-3 border-t bg-[#7b8d2f] p-3 text-center text-white sm:gap-4 sm:p-4">
         <div>
-          <div className="text-xl font-bold">{stats?.species_total ?? stats?.records_total ?? 0}</div>
+          <div className="text-xl font-bold">{stats ? (stats.species_total ?? stats.records_total ?? 0) : '—'}</div>
           <div className="text-xs">Especies registradas</div>
         </div>
         <div>
-          <div className="text-xl font-bold">{stats?.photos_total ?? 0}</div>
+          <div className="text-xl font-bold">{stats ? (stats.photos_total ?? 0) : '—'}</div>
           <div className="text-xs">Fotos tomadas</div>
         </div>
         <div>
-          <div className="text-xl font-bold">{stats?.audios_total ?? 0}</div>
+          <div className="text-xl font-bold">{stats ? (stats.audios_total ?? 0) : '—'}</div>
           <div className="text-xs">Audios grabados</div>
         </div>
       </div>
@@ -98,18 +98,30 @@ const PerfilUsuario = ({ profile = null, stats = {}, photos = [], audios = [], o
       <div className="px-4 pb-4 pt-5 sm:px-6 lg:px-8 lg:pb-6">
         <h3 className="text-xl sm:text-2xl font-bold">Fotos</h3>
         <div className="mt-3 grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-3 xl:grid-cols-4">
-        {photos && photos.length ? photos.slice(0, 6).map((p, i) => (
-          <div key={i} className="aspect-[4/3] bg-gray-200 rounded-xl overflow-hidden">
-            {p ? <img src={p} alt="foto" className="w-full h-full object-cover" /> : null}
-          </div>
-        )) : <div className="col-span-3 text-gray-500">Sin fotos</div>}
+        {photos && photos.length ? (
+          photos.slice(0, 6).map((p, i) => (
+            <div key={i} className="aspect-[4/3] bg-gray-200 rounded-xl overflow-hidden">
+              {p ? <img src={p} alt="foto" className="w-full h-full object-cover" /> : null}
+            </div>
+          ))
+        ) : stats === null ? (
+          <div className="col-span-3 text-gray-500">Cargando...</div>
+        ) : (
+          <div className="col-span-3 text-gray-500">Sin fotos</div>
+        )}
         </div>
 
         <h3 className="mt-6 text-xl sm:text-2xl font-bold">Audios</h3>
         <div className="mt-3 flex flex-col gap-2">
-          {(audios || []).slice(0,3).map((a, idx) => (
-            <div key={idx} className="w-full rounded-xl bg-gray-100 p-3">{a}</div>
-          ))}
+          {audios && audios.length ? (
+            (audios || []).slice(0,3).map((a, idx) => (
+              <div key={idx} className="w-full rounded-xl bg-gray-100 p-3">{a}</div>
+            ))
+          ) : stats === null ? (
+            <div className="text-gray-500">Cargando...</div>
+          ) : (
+            <div className="text-gray-500">Sin audios</div>
+          )}
         </div>
       </div>
     </form>

@@ -19,14 +19,9 @@ const FALLBACK_AUDIOS = ['Nombre animal', 'Nombre animal', 'Nombre animal'];
 
 function Profile() {
   const auth = getMockAuth();
-  const [stats, setStats] = useState({
-    records_total: 27,
-    photos_total: 15,
-    audios_total: 12,
-    species_total: 27,
-  });
-  const [photoItems, setPhotoItems] = useState(FALLBACK_PHOTOS);
-  const [audioItems, setAudioItems] = useState(FALLBACK_AUDIOS);
+  const [stats, setStats] = useState(null);
+  const [photoItems, setPhotoItems] = useState([]);
+  const [audioItems, setAudioItems] = useState([]);
   const [profile, setProfile] = useState(null);
 
   useEffect(() => {
@@ -78,12 +73,8 @@ function Profile() {
             .map((item) => item.name || item.scientificName || 'Audio grabado')
             .slice(0, 6);
 
-          setPhotoItems(
-            [...nextPhotoItems, ...FALLBACK_PHOTOS].slice(0, 6),
-          );
-          setAudioItems(
-            [...nextAudioItems, ...FALLBACK_AUDIOS].slice(0, 6),
-          );
+          setPhotoItems(nextPhotoItems.slice(0, 6));
+          setAudioItems(nextAudioItems.slice(0, 6));
         }
       } catch {
         if (!isActive) return;
