@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Search, X } from 'lucide-react';
 import { apiJson } from '../../../shared/lib/api';
-import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet';
+import { MapContainer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
@@ -9,6 +9,33 @@ import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 import 'leaflet/dist/leaflet.css';
 
 const DEFAULT_CENTER = [5.35, -62.2];
+const MAP_PAGE_SIZE = 100;
+const MAP_ENDPOINTS = ['/map/publications', '/publications/feed'];
+const MAP_REQUEST_TIMEOUT_MS = 15000;
+const SHOW_MAP_DEBUG = import.meta.env.DEV;
+const MAP_VIEW_BOX = { minLat: -90, maxLat: 90, minLng: -180, maxLng: 180 };
+
+function mergeUniquePublications(baseItems, incomingItems) {
+  const merged = [...baseItems];
+  const seenIds = new Set(baseItems.map((item) => item?.id).filter(Boolean));
+
+  for (const item of incomingItems) {
+    if (!item?.id || seenIds.has(item.id)) {
+      continue;
+    }
+
+    seenIds.add(item.id);
+    merged.push(item);
+  }
+
+  return merged;
+}
+
+function safeErrorMessage(error) {
+  if (!error) return '';
+  if (typeof error === 'string') return error;
+  return error.message || String(error);
+}
 
 function toCoordinate(value) {
   if (value === null || value === undefined || value === '') {
@@ -32,31 +59,55 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow,
 });
 
-function AutoFitBounds({ points }) {
-  const map = useMap();
-
-  useEffect(() => {
-    if (!points.length) return;
-
-    const bounds = L.latLngBounds(points.map((point) => [point.latitude, point.longitude]));
-    map.fitBounds(bounds.pad(0.2), { maxZoom: 11 });
-  }, [map, points]);
-
-  return null;
-}
-
 function MapResizeFix({ deps }) {
   const map = useMap();
 
   useEffect(() => {
-    const frame = window.requestAnimationFrame(() => {
-      map.invalidateSize();
-    });
+    const frames = [];
+    const timeouts = [];
 
-    return () => window.cancelAnimationFrame(frame);
+    frames.push(
+      window.requestAnimationFrame(() => {
+        map.invalidateSize();
+      }),
+    );
+    frames.push(
+      window.requestAnimationFrame(() => {
+        map.invalidateSize();
+      }),
+    );
+    timeouts.push(
+      window.setTimeout(() => {
+        map.invalidateSize();
+      }, 250),
+    );
+    timeouts.push(
+      window.setTimeout(() => {
+        map.invalidateSize();
+      }, 750),
+    );
+
+    return () => {
+      frames.forEach((frame) => window.cancelAnimationFrame(frame));
+      timeouts.forEach((timeoutId) => window.clearTimeout(timeoutId));
+    };
   }, [map, deps]);
 
   return null;
+}
+
+function latLngToPercent(latitude, longitude) {
+  const latRatio = (latitude - MAP_VIEW_BOX.minLat) / (MAP_VIEW_BOX.maxLat - MAP_VIEW_BOX.minLat);
+  const lngRatio = (longitude - MAP_VIEW_BOX.minLng) / (MAP_VIEW_BOX.maxLng - MAP_VIEW_BOX.minLng);
+
+  return {
+    top: `${(1 - latRatio) * 100}%`,
+    left: `${lngRatio * 100}%`,
+  };
+}
+
+function formatLocationLabel(latitude, longitude) {
+  return `Lat ${Number(latitude).toFixed(4)}, Lng ${Number(longitude).toFixed(4)}`;
 }
 
 function Map() {
@@ -64,23 +115,84 @@ function Map() {
   const [searchActive, setSearchActive] = useState(false);
   const [publications, setPublications] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [lastError, setLastError] = useState('');
+  const [requestCount, setRequestCount] = useState(0);
+  const [reloadNonce, setReloadNonce] = useState(0);
+  const [mapReady, setMapReady] = useState(false);
 
   useEffect(() => {
     let isActive = true;
 
     async function loadMapPublications() {
-      const endpoints = ['/map/publications?limit=100', '/publications/feed?limit=100'];
+      async function fetchPage(endpoint, page) {
+        const controller = new AbortController();
+        const timeoutId = window.setTimeout(() => controller.abort(), MAP_REQUEST_TIMEOUT_MS);
+
+        try {
+          setRequestCount((current) => current + 1);
+          const response = await apiJson(`${endpoint}?page=${page}&per_page=${MAP_PAGE_SIZE}`, {
+            signal: controller.signal,
+          });
+          return Array.isArray(response) ? response : [];
+        } catch (error) {
+          if (isActive) {
+            const message = `Error cargando ${endpoint}?page=${page}&per_page=${MAP_PAGE_SIZE}: ${safeErrorMessage(error)}`;
+            setLastError(message);
+            console.error(message, error);
+          }
+          throw error;
+        } finally {
+          window.clearTimeout(timeoutId);
+        }
+      }
+
+      async function loadRemainingPages(endpoint, startPage, initialItems = []) {
+        let page = 1;
+        let accumulated = initialItems;
+
+        while (isActive) {
+          const items = await fetchPage(endpoint, startPage + page - 1);
+
+          if (!items.length) {
+            break;
+          }
+
+          accumulated = mergeUniquePublications(accumulated, items);
+          if (!isActive) return;
+          setPublications((current) => mergeUniquePublications(current, accumulated));
+
+          if (items.length < MAP_PAGE_SIZE) {
+            break;
+          }
+
+          page += 1;
+        }
+      }
 
       try {
-        for (const endpoint of endpoints) {
+        for (const endpoint of MAP_ENDPOINTS) {
           try {
-            const response = await apiJson(endpoint);
+            const firstPageItems = await fetchPage(endpoint, 1);
             if (!isActive) return;
-            setPublications(Array.isArray(response) ? response : []);
+
+            setPublications(firstPageItems);
+            setIsLoading(false);
+            setLastError('');
+
+            if (firstPageItems.length >= MAP_PAGE_SIZE) {
+              void loadRemainingPages(endpoint, 2, firstPageItems).catch((error) => {
+                if (!isActive) return;
+                const message = `Error cargando páginas adicionales desde ${endpoint}: ${safeErrorMessage(error)}`;
+                setLastError(message);
+                console.error(message, error);
+              });
+            }
+
             return;
           } catch (error) {
             if (!isActive) return;
-            if (endpoint === endpoints[endpoints.length - 1]) {
+            console.error(`Endpoint principal falló: ${endpoint}`, error);
+            if (endpoint === MAP_ENDPOINTS[MAP_ENDPOINTS.length - 1]) {
               throw error;
             }
           }
@@ -88,6 +200,7 @@ function Map() {
       } catch {
         if (!isActive) return;
         setPublications([]);
+        setLastError('No se pudieron cargar publicaciones para el mapa.');
       } finally {
         if (isActive) {
           setIsLoading(false);
@@ -100,7 +213,7 @@ function Map() {
     return () => {
       isActive = false;
     };
-  }, []);
+  }, [reloadNonce]);
 
   const filteredPublications = useMemo(() => {
     const term = normalizeSearchText(query.trim());
@@ -159,9 +272,46 @@ function Map() {
     setSearchActive(false);
   };
 
+  useEffect(() => {
+    setMapReady(false);
+  }, [reloadNonce, mapPins.length]);
+
+  const handleReload = () => {
+    setLastError('');
+    setIsLoading(true);
+    setReloadNonce((current) => current + 1);
+  };
+
+  const mapBackgroundStyle = {
+    backgroundImage:
+      'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.86), rgba(232,234,236,0.72) 40%, rgba(224,228,233,0.92) 100%), linear-gradient(180deg, rgba(193,225,79,0.12), transparent 35%)',
+  };
+
   return (
     <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-[#edf7f9] px-3 pb-[calc(var(--zoa-bottom-height)+12px)] pt-2 sm:px-4 sm:pb-[calc(var(--zoa-bottom-height)+16px)] sm:pt-3">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(193,225,79,0.14),transparent_34%),linear-gradient(180deg,rgba(255,255,255,0.54)_0%,rgba(237,247,249,0.15)_32%,rgba(237,247,249,0.68)_100%)]" />
+
+      {SHOW_MAP_DEBUG ? (
+        <div className="relative z-20 mb-2 rounded-2xl border border-black/10 bg-white/90 px-3 py-2 text-[11px] font-semibold text-neutral-700 shadow-[0_10px_24px_rgba(0,0,0,0.08)] backdrop-blur-sm">
+          <div className="flex items-center justify-between gap-2">
+            <div>
+              <div>loading: {isLoading ? 'yes' : 'no'}</div>
+              <div>requests: {requestCount}</div>
+              <div>publications: {publications.length}</div>
+              <div>mapPins: {mapPins.length}</div>
+              <div>mapReady: {mapReady ? 'yes' : 'no'}</div>
+              {lastError ? <div className="mt-1 break-words text-red-600">{lastError}</div> : null}
+            </div>
+            <button
+              type="button"
+              onClick={handleReload}
+              className="rounded-full border border-black/10 bg-[#f8faf4] px-3 py-1 text-[11px] font-bold text-black hover:bg-[#eef4df]"
+            >
+              Refetch
+            </button>
+          </div>
+        </div>
+      ) : null}
 
       <form onSubmit={runSearch} className="relative z-10 shrink-0">
         <div className="flex items-center gap-2 rounded-[22px] border border-white/80 bg-white px-3 py-2.5 shadow-[0_10px_24px_rgba(0,0,0,0.10)]">
@@ -201,26 +351,57 @@ function Map() {
           </div>
         ) : null}
 
-        <MapContainer center={DEFAULT_CENTER} zoom={5} className="h-full w-full">
-          <TileLayer
-            attribution='&copy; OpenStreetMap contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-          <MapResizeFix deps={mapPins.length} />
-          {mapPins.length > 0 ? <AutoFitBounds points={mapPins} /> : null}
-          {mapPins.map((pin) => (
-            <Marker key={pin.id} position={[toCoordinate(pin.latitude), toCoordinate(pin.longitude)]}>
-              <Popup>
-                <div className="max-w-[220px] space-y-1">
-                  <p className="text-sm font-bold text-black">{pin.name || 'Publicación'}</p>
-                  <p className="text-xs text-neutral-600">{pin.scientificName || pin.species || 'Sin especie'}</p>
-                  <p className="text-xs text-neutral-600">{pin.location || 'Sin ubicación'}</p>
-                  <p className="text-xs text-neutral-500">{pin.authorName || 'Usuario'}</p>
+        {!isLoading && hasMapResults && mapPins.length > 0 ? (
+          <div className="absolute right-3 top-3 z-20 rounded-full border border-[#dbe6b1] bg-white/95 px-3 py-1.5 text-[11px] font-bold text-[#6c7920] shadow-[0_10px_24px_rgba(0,0,0,0.12)] backdrop-blur-sm">
+            {mapPins.length} pin{mapPins.length === 1 ? '' : 's'} listo{mapPins.length === 1 ? '' : 's'}
+          </div>
+        ) : null}
+
+        <div className="absolute inset-0 overflow-hidden rounded-[30px]" style={mapBackgroundStyle}>
+          <svg className="absolute inset-0 h-full w-full opacity-[0.18]" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            <defs>
+              <pattern id="map-grid" width="10" height="10" patternUnits="userSpaceOnUse">
+                <path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(78,93,99,0.35)" strokeWidth="0.4" />
+              </pattern>
+            </defs>
+            <rect width="100" height="100" fill="url(#map-grid)" />
+            <path d="M10,30 C22,24 25,42 37,39 C49,36 52,20 64,24 C72,27 73,40 82,44 C88,47 91,55 92,66" fill="none" stroke="rgba(78,93,99,0.45)" strokeWidth="0.8" />
+            <path d="M18,78 C26,70 31,74 39,69 C48,63 56,58 68,60 C77,61 84,67 89,73" fill="none" stroke="rgba(78,93,99,0.35)" strokeWidth="0.7" />
+          </svg>
+
+          {mapPins.map((pin) => {
+            const latitude = toCoordinate(pin.latitude);
+            const longitude = toCoordinate(pin.longitude);
+            if (latitude === null || longitude === null) return null;
+
+            const position = latLngToPercent(latitude, longitude);
+
+            return (
+              <div
+                key={pin.id}
+                className="absolute z-20 -translate-x-1/2 -translate-y-full"
+                style={position}
+              >
+                <div className="relative flex flex-col items-center">
+                  <span className="mb-1 rounded-full bg-black px-2 py-1 text-[11px] font-bold text-white shadow-[0_4px_12px_rgba(0,0,0,0.3)]">
+                    {pin.mediaType === 'audio' ? 'Audio' : 'Punto'}
+                  </span>
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full border-4 border-white bg-[#95a82b] text-lg text-white shadow-[0_10px_24px_rgba(0,0,0,0.28)]">
+                    {pin.mediaType === 'audio' ? '🎙' : '📍'}
+                  </div>
+                  <div className="mt-1 max-w-[130px] rounded-xl bg-white/95 px-3 py-2 text-center text-[10px] font-semibold leading-tight text-[#43501a] shadow-[0_8px_18px_rgba(0,0,0,0.18)]">
+                    <div className="truncate">{pin.name || 'Publicación'}</div>
+                    <div className="truncate text-[9px] font-medium text-neutral-600">{formatLocationLabel(latitude, longitude)}</div>
+                  </div>
                 </div>
-              </Popup>
-            </Marker>
-          ))}
-        </MapContainer>
+              </div>
+            );
+          })}
+
+          <div className="absolute inset-x-0 bottom-0 h-24 bg-[linear-gradient(180deg,rgba(255,255,255,0)_0%,rgba(255,255,255,0.64)_100%)]" />
+        </div>
+
+        {mapPins.length > 0 ? <MapContainer center={DEFAULT_CENTER} zoom={5} className="hidden" /> : null}
 
         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.02)_0%,rgba(255,255,255,0)_48%,rgba(0,0,0,0.06)_100%)]" />
       </div>
