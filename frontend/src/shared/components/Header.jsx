@@ -11,11 +11,11 @@ function Header({ compact = false }) {
 
   return (
     <header className={`relative z-30 w-[100vw] shrink-0 [margin-left:calc(50%-50vw)] ${headerHeightClass}`}>
-      <div className="relative h-full w-full overflow-hidden shadow-[0_6px_14px_rgba(0,0,0,0.14)]">
+      <div className="relative h-full w-full overflow-hidden bg-transparent shadow-none">
         <svg
           viewBox="0 0 406 89"
           preserveAspectRatio="none"
-          className="block h-full w-full"
+          className="block h-full w-full -mb-px"
           role="img"
           aria-label="ZOA"
         >
