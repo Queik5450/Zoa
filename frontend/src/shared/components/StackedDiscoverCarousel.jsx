@@ -166,6 +166,32 @@ export default function StackedDiscoverCarousel({ cards, isScanning }) {
   return (
     <section className="relative z-10 w-full select-none" aria-label="Carrusel destacado">
       <div className="mx-auto w-full max-w-[min(100%,920px)]">
+        <div className="mb-3 grid grid-cols-[auto_1fr_auto] items-center gap-2 rounded-[22px] border border-white/65 bg-white/70 px-3 py-2 shadow-[0_10px_26px_rgba(0,0,0,0.08)] backdrop-blur-sm sm:mb-4 sm:px-4 sm:py-3">
+          <button
+            type="button"
+            aria-label="Anterior"
+            onClick={goPrev}
+            disabled={!hasNavigation}
+            className="flex h-10 w-10 items-center justify-center rounded-2xl border border-[#d8e1bd] bg-white text-[#596427] shadow-[0_8px_18px_rgba(0,0,0,0.1)] transition-transform transition-opacity hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 sm:h-11 sm:w-11"
+          >
+            <ChevronLeft size={20} />
+          </button>
+
+          <div className="min-w-0 px-2 text-center text-[10px] font-semibold leading-tight tracking-wide text-[#5f6841] sm:text-[11px]">
+            Desliza para mover. Usa las flechas o el teclado para cambiar de tarjeta.
+          </div>
+
+          <button
+            type="button"
+            aria-label="Siguiente"
+            onClick={goNext}
+            disabled={!hasNavigation}
+            className="flex h-10 w-10 items-center justify-center rounded-2xl border border-[#d8e1bd] bg-white text-[#596427] shadow-[0_8px_18px_rgba(0,0,0,0.1)] transition-transform transition-opacity hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 sm:h-11 sm:w-11"
+          >
+            <ChevronRight size={20} />
+          </button>
+        </div>
+
         <div
           ref={stageRef}
           tabIndex={0}
@@ -208,7 +234,7 @@ export default function StackedDiscoverCarousel({ cards, isScanning }) {
                 transition: gestureRef.current.dragging ? 'none' : 'transform 320ms ease, opacity 320ms ease',
                 filter: offset === 0 ? 'none' : 'saturate(0.98) brightness(0.99)',
                 left: '50%',
-                top: '52%',
+                top: '56%',
                 transformOrigin: 'center center',
               };
 
@@ -240,69 +266,28 @@ export default function StackedDiscoverCarousel({ cards, isScanning }) {
             })}
           </div>
 
-          {hasNavigation ? (
-            <>
-              <button
-                type="button"
-                aria-label="Tarjeta anterior"
-                onClick={goPrev}
-                className="absolute left-[-10px] top-1/2 z-[70] hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-[#d8e1bd] bg-white text-[#576129] shadow-[0_12px_28px_rgba(0,0,0,0.16)] transition-transform hover:scale-105 active:scale-95 md:flex"
-              >
-                <ChevronLeft size={22} />
-              </button>
-              <button
-                type="button"
-                aria-label="Siguiente tarjeta"
-                onClick={goNext}
-                className="absolute right-[-10px] top-1/2 z-[70] hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-[#d8e1bd] bg-white text-[#576129] shadow-[0_12px_28px_rgba(0,0,0,0.16)] transition-transform hover:scale-105 active:scale-95 md:flex"
-              >
-                <ChevronRight size={22} />
-              </button>
-            </>
-          ) : null}
+          {null}
         </div>
 
-        <div className="mt-4 flex items-center justify-between gap-3">
-          <button
-            type="button"
-            aria-label="Anterior"
-            onClick={goPrev}
-            disabled={!hasNavigation}
-            className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[#d8e1bd] bg-white text-xl font-black text-[#596427] shadow-sm transition-opacity disabled:cursor-not-allowed disabled:opacity-40 md:hidden"
-          >
-            <ChevronLeft size={20} />
-          </button>
-
-          <div className="flex flex-1 justify-center gap-1.5 overflow-hidden">
-            {cards.map((card, idx) => (
-              <button
-                key={card.id}
-                type="button"
-                aria-label={`Ir a tarjeta ${idx + 1}`}
-                onClick={() => goTo(idx)}
-                className={[
-                  'transition-all duration-300',
-                  idx === activeIndex
-                    ? 'h-2.5 w-8 rounded-full bg-[#c1e14f] shadow-[0_0_0_3px_rgba(193,225,79,0.18)]'
-                    : 'h-2.5 w-2.5 rounded-full bg-[#ced7bb] hover:bg-[#b8c693]',
-                ].join(' ')}
-              />
-            ))}
-          </div>
-
-          <button
-            type="button"
-            aria-label="Siguiente"
-            onClick={goNext}
-            disabled={!hasNavigation}
-            className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[#d8e1bd] bg-white text-xl font-black text-[#596427] shadow-sm transition-opacity disabled:cursor-not-allowed disabled:opacity-40 md:hidden"
-          >
-            <ChevronRight size={20} />
-          </button>
+        <div className="mt-4 flex justify-center gap-1.5 overflow-hidden">
+          {cards.map((card, idx) => (
+            <button
+              key={card.id}
+              type="button"
+              aria-label={`Ir a tarjeta ${idx + 1}`}
+              onClick={() => goTo(idx)}
+              className={[
+                'transition-all duration-300',
+                idx === activeIndex
+                  ? 'h-2.5 w-8 rounded-full bg-[#c1e14f] shadow-[0_0_0_3px_rgba(193,225,79,0.18)]'
+                  : 'h-2.5 w-2.5 rounded-full bg-[#ced7bb] hover:bg-[#b8c693]',
+              ].join(' ')}
+            />
+          ))}
         </div>
 
         <p className="mt-2 text-center text-[10px] font-medium text-neutral-500 sm:text-[11px]">
-          Arrastra en ambos sentidos, usa las flechas o el teclado para cambiar de tarjeta. Toca o haz clic sobre la carta activa para voltearla.
+          Toca o haz clic sobre la carta activa para voltearla.
         </p>
       </div>
     </section>
