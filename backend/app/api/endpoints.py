@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import os
+import logging
+import time
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
@@ -18,6 +20,8 @@ PUBLICATION_TABLE = "publications"
 SPECIES_TABLE = "species"
 LOCATION_TABLE = "locations"
 PROFILE_TABLE = "profiles"
+MAP_PUBLICATIONS_MAT = "map_publications_mat"
+USER_STATS_MAT = "user_stats_mat"
 
 
 class ScanResult(BaseModel):
@@ -45,8 +49,9 @@ def _safe_query(query):
     try:
         return query.execute()
     except Exception as exc:
+        # Log and re-raise so callers (and FastAPI) can observe the error.
         print(f"Supabase query failed: {exc}")
-        return None
+        raise
 
 
 def _shape_publication(row: Dict[str, Any]) -> Dict[str, Any]:
@@ -158,8 +163,38 @@ def _sync_profile(user_id: str, email: Optional[str], display_name: Optional[str
     return payload
 
 
-def _fetch_publications(filters: Optional[Dict[str, Any]] = None, limit: int = 50) -> List[Dict[str, Any]]:
-    query = supabase.table(PUBLICATION_TABLE).select("*").order("created_at", desc=True).limit(limit)
+def _fetch_publications(filters: Optional[Dict[str, Any]] = None, limit: int = 50, page: int = 1, per_page: Optional[int] = None, use_mat_view: bool = False) -> List[Dict[str, Any]]:
+    """Fetch publications with column selection and pagination.
+
+    - `per_page` defaults to `limit` for backward compatibility.
+    - Uses `.range(start, end)` to avoid scanning unnecessary rows.
+    - Logs query duration in ms.
+    Returns a list of shaped publication dicts (same as before).
+    """
+    if per_page is None:
+        per_page = limit or 50
+    per_page = max(1, int(per_page))
+    page = max(1, int(page))
+
+    start = (page - 1) * per_page
+    # request one extra row to detect if there are more pages
+    end_extra = start + per_page
+
+    if use_mat_view:
+        # map_publications_mat contains the public-facing fields joined with locations
+        select_columns = (
+            "id, common_name, scientific_name, display_name, user_email, "
+            "description, location_label, media_url, storage_path, is_public, "
+            "media_type, user_id, species_id, location_id, latitude, longitude, category, created_at"
+        )
+        query = supabase.table(MAP_PUBLICATIONS_MAT).select(select_columns).order("created_at", desc=True).range(start, end_extra)
+    else:
+        select_columns = (
+            "id, common_name, scientific_name, display_name, user_email, "
+            "description, location_label, media_url, "
+            "media_type, user_id, species_id, location_id, latitude, longitude, category, created_at"
+        )
+        query = supabase.table(PUBLICATION_TABLE).select(select_columns).order("created_at", desc=True).range(start, end_extra)
 
     if filters:
         for field_name, value in filters.items():
@@ -167,8 +202,41 @@ def _fetch_publications(filters: Optional[Dict[str, Any]] = None, limit: int = 5
                 continue
             query = query.eq(field_name, value)
 
-    response = _safe_query(query)
+    logging.info("Executing publications query: filters=%s page=%s per_page=%s start=%s end=%s", filters, page, per_page, start, end_extra)
+    t0 = time.time()
+    # Try the requested query; if materialized view/table doesn't exist or fails,
+    # fall back to the base `publications` table to preserve availability.
+    try:
+        response = _safe_query(query)
+    except Exception as exc:
+        logging.warning("Publications query failed (attempted view/table=%s): %s", (MAP_PUBLICATIONS_MAT if use_mat_view else PUBLICATION_TABLE), exc)
+        if use_mat_view:
+            # build fallback query against publications
+            fallback_select = (
+                "id, common_name, scientific_name, display_name, user_email, "
+                "description, location_label, media_url, "
+                "media_type, user_id, species_id, location_id, latitude, longitude, category, created_at"
+            )
+            try:
+                fallback_query = supabase.table(PUBLICATION_TABLE).select(fallback_select).order("created_at", desc=True).range(start, end_extra)
+                if filters:
+                    for field_name, value in filters.items():
+                        if value is None:
+                            continue
+                        fallback_query = fallback_query.eq(field_name, value)
+                response = _safe_query(fallback_query)
+            except Exception:
+                raise
+        else:
+            raise
+    duration_ms = int((time.time() - t0) * 1000)
     rows = response.data if response and response.data else []
+
+    has_more = len(rows) > per_page
+    if has_more:
+        rows = rows[:per_page]
+
+    logging.info("Publications query completed: duration_ms=%sms rows_returned=%s has_more=%s", duration_ms, len(rows), has_more)
     return [_shape_publication(row) for row in rows]
 
 
@@ -313,6 +381,18 @@ async def create_publication(
     except Exception as exc:
         print(f"Profile sync failed: {exc}")
         # do not block publication for profile sync, but log
+    # Ensure profile exists before inserting publication to satisfy FK / RLS requirements
+    try:
+        profile_check = _safe_query(
+            supabase.table(PROFILE_TABLE).select("id").eq("id", user_id).limit(1)
+        )
+        if not (profile_check and profile_check.data):
+            raise HTTPException(status_code=400, detail="User profile not found or not authorized to create publications.")
+    except HTTPException:
+        raise
+    except Exception as exc:
+        print(f"Profile existence check failed: {exc}")
+        raise HTTPException(status_code=500, detail="Failed to verify user profile before creating publication.")
     species_id = _get_or_create_species_id(
         {
             "common_name": common_name,
@@ -371,48 +451,85 @@ async def create_publication(
 
 
 @router.get("/publications/feed")
-def get_public_feed(limit: int = 50):
-    return _fetch_publications({"is_public": True}, limit=limit)
+def get_public_feed(limit: int = 50, page: int = 1, per_page: Optional[int] = None):
+    return _fetch_publications({"is_public": True}, limit=limit, page=page, per_page=per_page, use_mat_view=True)
 
 
 @router.get("/publications/user/{user_id}")
-def get_user_publications(user_id: str, limit: int = 50):
-    return _fetch_publications({"user_id": user_id}, limit=limit)
+def get_user_publications(user_id: str, limit: int = 50, page: int = 1, per_page: Optional[int] = None):
+    return _fetch_publications({"user_id": user_id}, limit=limit, page=page, per_page=per_page, use_mat_view=True)
 
 
 @router.get("/species/{species_id}/publications")
-def get_species_publications(species_id: str, limit: int = 50):
-    return _fetch_publications({"species_id": species_id}, limit=limit)
+def get_species_publications(species_id: str, limit: int = 50, page: int = 1, per_page: Optional[int] = None):
+    return _fetch_publications({"species_id": species_id}, limit=limit, page=page, per_page=per_page, use_mat_view=True)
 
 
 @router.get("/users/{user_id}/stats")
 def get_user_stats(user_id: str):
-    publications = _fetch_publications({"user_id": user_id}, limit=500)
-    total_publications = len(publications)
-    photo_count = sum(1 for item in publications if item.get("mediaType") == "photo")
-    audio_count = sum(1 for item in publications if item.get("mediaType") == "audio")
-    video_count = sum(1 for item in publications if item.get("mediaType") == "video")
-    species_total = len({item.get("speciesId") for item in publications if item.get("speciesId")})
-    location_total = len({item.get("locationId") for item in publications if item.get("locationId")})
+    # Prefer materialized view for stats if available
+    try:
+        resp = _safe_query(supabase.table(USER_STATS_MAT).select("*").eq("user_id", user_id).limit(1))
+        if resp and resp.data:
+            row = resp.data[0]
+            return {
+                "user_id": user_id,
+                "records_total": int(row.get("records_total") or 0),
+                "publications_total": int(row.get("records_total") or 0),
+                "photos_total": int(row.get("photos_total") or 0),
+                "audios_total": int(row.get("audios_total") or 0),
+                "videos_total": int(row.get("videos_total") or 0),
+                "species_total": int(row.get("species_total") or 0),
+                "locations_total": int(row.get("locations_total") or 0),
+            }
+    except Exception:
+        # Fall back to on-the-fly computation if view is not present or fails
+        publications = _fetch_publications({"user_id": user_id}, limit=500)
+        total_publications = len(publications)
+        photo_count = sum(1 for item in publications if item.get("mediaType") == "photo")
+        audio_count = sum(1 for item in publications if item.get("mediaType") == "audio")
+        video_count = sum(1 for item in publications if item.get("mediaType") == "video")
+        species_total = len({item.get("speciesId") for item in publications if item.get("speciesId")})
+        location_total = len({item.get("locationId") for item in publications if item.get("locationId")})
 
-    return {
-        "user_id": user_id,
-        "records_total": total_publications,
-        "publications_total": total_publications,
-        "photos_total": photo_count,
-        "audios_total": audio_count,
-        "videos_total": video_count,
-        "species_total": species_total,
-        "locations_total": location_total,
-    }
+        return {
+            "user_id": user_id,
+            "records_total": total_publications,
+            "publications_total": total_publications,
+            "photos_total": photo_count,
+            "audios_total": audio_count,
+            "videos_total": video_count,
+            "species_total": species_total,
+            "locations_total": location_total,
+        }
+
+
+@router.post("/admin/refresh-materialized-views")
+def refresh_materialized_views(x_refresh_admin_key: Optional[str] = None):
+    """Trigger the DB helper `public.refresh_materialized_views()`.
+
+    Protect with an admin key via `REFRESH_ADMIN_KEY` env var. If unset, falls back to `SUPABASE_KEY`.
+    """
+    expected = os.environ.get("REFRESH_ADMIN_KEY") or os.environ.get("SUPABASE_KEY")
+    if expected and x_refresh_admin_key != expected:
+        raise HTTPException(status_code=403, detail="Unauthorized to refresh materialized views.")
+
+    t0 = time.time()
+    try:
+        # Call the DB function; PostgREST exposes RPC via rpc(name)
+        _safe_query(supabase.rpc("refresh_materialized_views"))
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Failed to refresh materialized views: {exc}")
+    duration_ms = int((time.time() - t0) * 1000)
+    return {"status": "ok", "duration_ms": duration_ms}
 
 
 @router.get("/map/publications")
-def get_map_publications(limit: int = 100):
-    items = _fetch_publications({"is_public": True}, limit=limit)
+def get_map_publications(limit: int = 100, page: int = 1, per_page: Optional[int] = None):
+    items = _fetch_publications({"is_public": True}, limit=limit, page=page, per_page=per_page, use_mat_view=True)
     return [item for item in items if item.get("latitude") is not None and item.get("longitude") is not None]
 
 
 @router.get("/guayanadex/{user_id}")
-def get_user_records(user_id: str):
-    return get_user_publications(user_id)
+def get_user_records(user_id: str, limit: int = 50, page: int = 1, per_page: Optional[int] = None):
+    return get_user_publications(user_id, limit=limit, page=page, per_page=per_page)

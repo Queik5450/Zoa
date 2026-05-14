@@ -1,0 +1,21 @@
+name: Refresh Materialized Views
+
+on:
+  schedule:
+    # every 6 hours
+    - cron: '0 */6 * * *'
+  workflow_dispatch: {}
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call admin refresh endpoint
+        env:
+          REFRESH_ADMIN_KEY: ${{ secrets.REFRESH_ADMIN_KEY }}
+          BACKEND_URL: ${{ secrets.BACKEND_URL }}
+        run: |
+          if [ -z "$BACKEND_URL" ] || [ -z "$REFRESH_ADMIN_KEY" ]; then
+            echo "Missing BACKEND_URL or REFRESH_ADMIN_KEY secret"; exit 1
+          fi
+          curl -sS -X POST "$BACKEND_URL/api/admin/refresh-materialized-views?x_refresh_admin_key=$REFRESH_ADMIN_KEY" | jq || true

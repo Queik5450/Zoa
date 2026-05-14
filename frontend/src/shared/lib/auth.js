@@ -15,7 +15,7 @@ export async function hydrateMockAuthFromSession(mode = 'login', fallbackDisplay
   }
 
   const resolvedDisplayName = user.user_metadata?.full_name || user.user_metadata?.name || fallbackDisplayName;
-  const resolvedEmail = user.email || '';
+  const resolvedEmail = (user.email || '').toLowerCase();
 
   setMockAuth({
     mode,

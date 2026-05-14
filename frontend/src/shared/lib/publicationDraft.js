@@ -77,7 +77,8 @@ export async function publishPendingPublicationDraft(draft = null) {
   // Idempotency: send client-generated publication id so backend can dedupe
   const clientPubId = currentDraft.id || (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `client-${Date.now()}-${Math.random().toString(36).slice(2,8)}`);
   formData.append('publication_id', clientPubId);
-  formData.append('user_id', authSession.userId || authSession.id || authSession.email || 'anonymous');
+  // Require a valid user id (UUID) from the authenticated session. Do not fallback to email or anonymous.
+  formData.append('user_id', authSession.userId);
   formData.append('user_email', authSession.email || '');
   formData.append('display_name', authSession.displayName || currentDraft.authorName?.replace(/^@/, '') || 'usuario');
   formData.append('common_name', analysis.common_name || currentDraft.name || 'Desconocido');

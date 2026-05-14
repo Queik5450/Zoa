@@ -197,6 +197,32 @@ select
 from public.publications p
 group by p.user_id;
 
+-- Materialized views to speed up read-heavy aggregates and map queries
+-- These provide fast, indexable access for feed and user stats queries.
+create materialized view if not exists public.map_publications_mat as
+select * from public.map_publications with no data;
+
+create materialized view if not exists public.user_stats_mat as
+select * from public.user_stats with no data;
+
+-- Indexes for materialized views (required for CONCURRENTLY refresh)
+create unique index if not exists idx_map_pub_id on public.map_publications_mat (id);
+create index if not exists idx_map_pub_created_at on public.map_publications_mat using btree (created_at desc);
+create unique index if not exists idx_user_stats_user_id on public.user_stats_mat (user_id);
+
+-- Helper function to refresh materialized views. Use with care in production
+-- (CONCURRENTLY requires the unique indexes above).
+create or replace function public.refresh_materialized_views()
+returns void
+language plpgsql
+as $$
+begin
+    -- Refresh concurrently to avoid exclusive locks when possible
+    refresh materialized view concurrently public.map_publications_mat;
+    refresh materialized view concurrently public.user_stats_mat;
+end;
+$$;
+
 alter table public.profiles enable row level security;
 alter table public.species enable row level security;
 alter table public.locations enable row level security;

@@ -28,7 +28,7 @@ function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const normalizedEmail = email.trim();
+    const normalizedEmail = (email || '').trim().toLowerCase();
     const displayName = (username || normalizedEmail.split('@')[0] || 'usuario').trim();
     const cooldownRemaining = getAuthCooldownRemainingMs();
 
