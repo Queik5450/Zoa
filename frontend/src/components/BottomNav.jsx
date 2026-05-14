@@ -30,8 +30,8 @@ function NavItem({ active, svgRaw, iconSrc, label, onClick }) {
     <button
       type="button"
       onClick={onClick}
-      className={`appearance-none border-0 bg-transparent p-0 text-inherit outline-none relative flex flex-col items-center justify-center pt-2 transition-all ${
-        active ? 'opacity-100' : 'opacity-80'
+      className={`appearance-none border-0 bg-transparent p-0 text-inherit outline-none relative flex flex-col items-center justify-center pt-2 transition-all hover:opacity-100 ${
+        active ? 'opacity-100' : 'opacity-80 hover:text-green-500'
       }`}
     >
       <span
@@ -48,11 +48,7 @@ function NavItem({ active, svgRaw, iconSrc, label, onClick }) {
           dangerouslySetInnerHTML={{ __html: cleanSvgColors(svgRaw, color) }}
         />
       ) : null}
-      <span
-        className={`mt-1 truncate text-center text-[11px] font-bold leading-none tracking-tight ${active ? 'text-[#96b232]' : 'text-[#7B7B7B]'}`}
-      >
-        {label}
-      </span>
+      <span className="text-sm mt-1">{label}</span>
     </button>
   );
 }

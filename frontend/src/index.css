@@ -31,3 +31,13 @@ body,
   background-color: #888;
   border-radius: 4px;
 }
+
+@media (min-width: 768px) {
+  .logo {
+    height: clamp(50px, 15vw, 100px);
+  }
+}
+
+.logo {
+  height: clamp(42px, 11vw, 58px);
+}

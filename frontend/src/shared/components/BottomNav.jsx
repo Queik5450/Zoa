@@ -25,13 +25,13 @@ const cleanSvgColors = (svg, color) => {
 };
 
 function NavItem({ active, svgRaw, iconSrc, label, onClick }) {
-  const color = active ? ACCENT : MUTED;
+  const btnColorClass = active ? 'text-[#96b232]' : 'text-[#7B7B7B]';
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`appearance-none border-0 bg-transparent p-0 text-inherit outline-none relative flex flex-col items-center justify-center pt-2 transition-all ${
-        active ? 'opacity-100' : 'opacity-80'
+      className={`appearance-none border-0 bg-transparent p-0 outline-none relative flex flex-col items-center justify-center pt-2 transition-all ${btnColorClass} hover:text-[#96b232] hover:scale-105 ${
+        active ? 'opacity-100' : 'opacity-85'
       }`}
     >
       <span
@@ -39,17 +39,24 @@ function NavItem({ active, svgRaw, iconSrc, label, onClick }) {
         aria-hidden
       />
       {iconSrc ? (
-        <img src={iconSrc} alt="" className="absolute top-2 h-[26px] w-[26px] object-contain" aria-hidden />
+        <img
+          src={iconSrc}
+          alt=""
+          className={`absolute top-2 h-[26px] w-[26px] object-contain transition-all duration-150 ${
+            active ? 'filter-none opacity-100' : 'grayscale contrast-75 opacity-80'
+          } hover:grayscale-0 hover:opacity-100`}
+          aria-hidden
+        />
       ) : null}
       {svgRaw ? (
         <span
           className="absolute top-2 flex h-[26px] w-[26px] items-center justify-center bg-transparent [&>svg]:h-full [&>svg]:w-full"
           aria-hidden
-          dangerouslySetInnerHTML={{ __html: cleanSvgColors(svgRaw, color) }}
+          dangerouslySetInnerHTML={{ __html: cleanSvgColors(svgRaw, 'currentColor') }}
         />
       ) : null}
       <span
-        className={`mt-1 truncate text-center text-[11px] font-bold leading-none tracking-tight ${active ? 'text-[#96b232]' : 'text-[#7B7B7B]'}`}
+        className="mt-1 truncate text-center text-[11px] font-bold leading-none tracking-tight text-current"
       >
         {label}
       </span>
