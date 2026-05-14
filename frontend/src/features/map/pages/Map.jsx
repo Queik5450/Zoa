@@ -45,6 +45,20 @@ function AutoFitBounds({ points }) {
   return null;
 }
 
+function MapResizeFix({ deps }) {
+  const map = useMap();
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      map.invalidateSize();
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [map, deps]);
+
+  return null;
+}
+
 function Map() {
   const [query, setQuery] = useState('');
   const [searchActive, setSearchActive] = useState(false);
@@ -116,6 +130,10 @@ function Map() {
 
   const visiblePins = searchActive ? filteredPublications : publications;
   const hasMapResults = publications.length > 0;
+  const mapPins = useMemo(
+    () => visiblePins.filter((item) => toCoordinate(item.latitude) !== null && toCoordinate(item.longitude) !== null),
+    [visiblePins],
+  );
   const stats = useMemo(
     () => ({
       photos: filteredPublications.filter((item) => item.mediaType === 'photo' || item.mediaType === undefined).length,
@@ -183,29 +201,26 @@ function Map() {
           </div>
         ) : null}
 
-        {hasMapResults ? (
-          <MapContainer center={DEFAULT_CENTER} zoom={5} className="h-full w-full">
-            <TileLayer
-              attribution='&copy; OpenStreetMap contributors'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-            <AutoFitBounds points={visiblePins.filter((item) => toCoordinate(item.latitude) !== null && toCoordinate(item.longitude) !== null)} />
-            {visiblePins
-              .filter((item) => toCoordinate(item.latitude) !== null && toCoordinate(item.longitude) !== null)
-              .map((pin) => (
-                <Marker key={pin.id} position={[toCoordinate(pin.latitude), toCoordinate(pin.longitude)]}>
-                  <Popup>
-                    <div className="max-w-[220px] space-y-1">
-                      <p className="text-sm font-bold text-black">{pin.name || 'Publicación'}</p>
-                      <p className="text-xs text-neutral-600">{pin.scientificName || pin.species || 'Sin especie'}</p>
-                      <p className="text-xs text-neutral-600">{pin.location || 'Sin ubicación'}</p>
-                      <p className="text-xs text-neutral-500">{pin.authorName || 'Usuario'}</p>
-                    </div>
-                  </Popup>
-                </Marker>
-              ))}
-          </MapContainer>
-        ) : null}
+        <MapContainer center={DEFAULT_CENTER} zoom={5} className="h-full w-full">
+          <TileLayer
+            attribution='&copy; OpenStreetMap contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+          <MapResizeFix deps={mapPins.length} />
+          {mapPins.length > 0 ? <AutoFitBounds points={mapPins} /> : null}
+          {mapPins.map((pin) => (
+            <Marker key={pin.id} position={[toCoordinate(pin.latitude), toCoordinate(pin.longitude)]}>
+              <Popup>
+                <div className="max-w-[220px] space-y-1">
+                  <p className="text-sm font-bold text-black">{pin.name || 'Publicación'}</p>
+                  <p className="text-xs text-neutral-600">{pin.scientificName || pin.species || 'Sin especie'}</p>
+                  <p className="text-xs text-neutral-600">{pin.location || 'Sin ubicación'}</p>
+                  <p className="text-xs text-neutral-500">{pin.authorName || 'Usuario'}</p>
+                </div>
+              </Popup>
+            </Marker>
+          ))}
+        </MapContainer>
 
         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.02)_0%,rgba(255,255,255,0)_48%,rgba(0,0,0,0.06)_100%)]" />
       </div>

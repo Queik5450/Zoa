@@ -1,21 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Play } from 'lucide-react';
 import { getMockAuth } from '../../../shared/lib/scanFlow';
 import { apiJson, apiUrl } from '../../../shared/lib/api';
 import PerfilUsuario from '../../../PerfilZoa/src/components/PerfilUsuario';
 import '../../../PerfilZoa/src/global.css';
-
-const FALLBACK_PHOTOS = [
-  null,
-  'https://picsum.photos/seed/zoaBird/400/400',
-  null,
-  'https://picsum.photos/seed/zoaMonkey/400/400',
-  null,
-  'https://picsum.photos/seed/zoaMonkey2/400/400',
-];
-
-const FALLBACK_AUDIOS = ['Nombre animal', 'Nombre animal', 'Nombre animal'];
 
 function Profile() {
   const auth = getMockAuth();
@@ -24,6 +12,7 @@ function Profile() {
   const [audioItems, setAudioItems] = useState([]);
   const [profile, setProfile] = useState(null);
   const [profileLoaded, setProfileLoaded] = useState(false);
+  const [hasPublications, setHasPublications] = useState(null);
 
   useEffect(() => {
     let isActive = true;
@@ -69,11 +58,17 @@ function Profile() {
             .map((item) => item.name || item.scientificName || 'Audio grabado')
             .slice(0, 6);
 
-          setPhotoItems(nextPhotoItems.length ? nextPhotoItems : FALLBACK_PHOTOS.slice(0, 6));
-          setAudioItems(nextAudioItems.length ? nextAudioItems : FALLBACK_AUDIOS.slice(0, 6));
+          const nextHasPublications = nextPhotoItems.length > 0 || nextAudioItems.length > 0;
+
+          setHasPublications(nextHasPublications);
+          setPhotoItems(nextPhotoItems);
+          setAudioItems(nextAudioItems);
         }
       } catch {
         if (!isActive) return;
+        setHasPublications(false);
+        setPhotoItems([]);
+        setAudioItems([]);
       }
     }
 
@@ -113,6 +108,11 @@ function Profile() {
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden bg-[#eef3f8] pb-24">
       <div className="px-3 pt-4 sm:px-4 md:px-6 lg:px-8 xl:px-10">
+        {profileLoaded && hasPublications === false ? (
+          <div className="mb-4 rounded-2xl border border-[#7b8d2f]/20 bg-white px-4 py-3 text-sm font-semibold text-[#7b8d2f] shadow-sm">
+            No tiene publicaciones asociadas.
+          </div>
+        ) : null}
         <PerfilUsuario
           profile={profile}
           stats={stats}

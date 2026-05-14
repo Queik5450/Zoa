@@ -256,6 +256,50 @@ def _fetch_publications(filters: Optional[Dict[str, Any]] = None, limit: int = 5
     duration_ms = int((time.time() - t0) * 1000)
     rows = response.data if response and response.data else []
 
+    if not rows and filters and set(filters.keys()) == {"user_id"} and filters.get("user_id"):
+        user_id = filters["user_id"]
+        profile_resp = _safe_query(
+            supabase.table(PROFILE_TABLE)
+            .select("email,display_name")
+            .eq("id", user_id)
+            .limit(1)
+        )
+        profile_row = profile_resp.data[0] if profile_resp and profile_resp.data else None
+        fallback_email = (profile_row or {}).get("email")
+        fallback_display_name = (profile_row or {}).get("display_name")
+
+        fallback_rows: List[Dict[str, Any]] = []
+        try:
+            base_query = (
+                supabase.table(PUBLICATION_TABLE)
+                .select(
+                    "id, common_name, scientific_name, display_name, user_email, description, location_label, media_url, media_type, user_id, species_id, location_id, latitude, longitude, category, created_at"
+                )
+                .order("created_at", desc=True)
+            )
+
+            if fallback_email:
+                email_resp = _safe_query(base_query.eq("user_email", fallback_email).range(start, end_extra))
+                fallback_rows.extend(email_resp.data if email_resp and email_resp.data else [])
+
+            if fallback_display_name:
+                name_resp = _safe_query(base_query.eq("display_name", fallback_display_name).range(start, end_extra))
+                fallback_rows.extend(name_resp.data if name_resp and name_resp.data else [])
+
+            if fallback_rows:
+                deduped: List[Dict[str, Any]] = []
+                seen_ids = set()
+                for row in fallback_rows:
+                    row_id = row.get("id")
+                    if row_id and row_id in seen_ids:
+                        continue
+                    if row_id:
+                        seen_ids.add(row_id)
+                    deduped.append(row)
+                rows = deduped[:per_page]
+        except Exception:
+            pass
+
     has_more = len(rows) > per_page
     if has_more:
         rows = rows[:per_page]
