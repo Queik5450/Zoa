@@ -108,19 +108,19 @@ function PublicationFlipCard({ card, isScanning = false, onOpen }) {
                 ) : null}
               </div>
 
-              <div className="flex h-[34%] min-h-[112px] flex-col justify-center bg-white px-4 pb-3 pt-2">
+              <div className="flex min-h-[92px] flex-none flex-col justify-start bg-white px-4 py-3">
                 <div className="min-w-0">
                   <span className="block truncate text-[22px] font-black leading-tight text-black">{title}</span>
                 </div>
 
-                <div className="mt-1 flex w-full items-end justify-between gap-3">
-                  <div className="flex min-w-0 items-center gap-1 text-[13px] font-bold text-neutral-500">
-                    <MapPin size={14} className="shrink-0 text-neutral-400" />
-                    <span className="truncate leading-none">{locationLabel}</span>
+                <div className="mt-0.5 flex w-full flex-col gap-0.5">
+                  <div className="text-[13px] font-bold text-neutral-500">
+                    <span className="block truncate leading-none">{scientificLabel}</span>
                   </div>
 
-                  <div className="text-[13px] font-bold text-neutral-500">
-                    <span className="truncate leading-none">{scientificLabel}</span>
+                  <div className="mt-1.5 flex min-w-0 items-center gap-1 text-[13px] font-bold text-neutral-500">
+                    <MapPin size={14} className="shrink-0 text-neutral-400" />
+                    <span className="truncate leading-none">{locationLabel}</span>
                   </div>
                 </div>
               </div>

@@ -19,6 +19,13 @@ function toCoordinate(value) {
   return Number.isFinite(numericValue) ? numericValue : null;
 }
 
+function normalizeSearchText(value) {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+}
+
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: markerIcon2x,
   iconUrl: markerIcon,
@@ -70,7 +77,7 @@ function Map() {
   }, []);
 
   const filteredPublications = useMemo(() => {
-    const term = query.trim().toLowerCase();
+    const term = normalizeSearchText(query.trim());
     if (!term) {
       return publications;
     }
@@ -82,10 +89,14 @@ function Map() {
         item.scientificName,
         item.location,
         item.authorName,
+        item.common_name,
+        item.scientific_name,
+        item.location_label,
+        item.display_name,
       ]
         .filter(Boolean)
-        .join(' ')
-        .toLowerCase();
+        .map((field) => normalizeSearchText(field))
+        .join(' ');
 
       return haystack.includes(term);
     });

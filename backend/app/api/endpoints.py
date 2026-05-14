@@ -602,7 +602,9 @@ def refresh_materialized_views(x_refresh_admin_key: Optional[str] = None):
 
 @router.get("/map/publications")
 def get_map_publications(limit: int = 100, page: int = 1, per_page: Optional[int] = None):
-    items = _fetch_publications({"is_public": True}, limit=limit, page=page, per_page=per_page, use_mat_view=True)
+    # Use the live publications table so new map items appear immediately even if
+    # the materialized view has not been refreshed yet.
+    items = _fetch_publications({"is_public": True}, limit=limit, page=page, per_page=per_page, use_mat_view=False)
     return [item for item in items if item.get("latitude") is not None and item.get("longitude") is not None]
 
 

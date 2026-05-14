@@ -23,12 +23,14 @@ function Profile() {
   const [photoItems, setPhotoItems] = useState([]);
   const [audioItems, setAudioItems] = useState([]);
   const [profile, setProfile] = useState(null);
+  const [profileLoaded, setProfileLoaded] = useState(false);
 
   useEffect(() => {
     let isActive = true;
     const userId = auth?.userId || auth?.id || null;
 
     if (!userId) {
+      setProfileLoaded(true);
       return undefined;
     }
 
@@ -52,15 +54,9 @@ function Profile() {
         });
 
         if (profileData) setProfile(profileData);
-        else if (!profileData && auth) {
-          // fallback to local mock auth so page renders on localhost without backend
-          setProfile({
-            display_name: auth.display_name || auth?.user?.name || auth?.email?.split('@')[0],
-            email: auth.email || '',
-            avatar_url: auth.avatar_url || null,
-            bio: auth.bio || '',
-          });
-        }
+        else setProfile(null);
+
+        setProfileLoaded(true);
 
         if (Array.isArray(publications)) {
           const nextPhotoItems = publications
@@ -89,6 +85,19 @@ function Profile() {
   }, [auth?.id, auth?.userId]);
 
   if (!auth) {
+    return (
+      <div className="flex min-h-0 flex-1 flex-col items-center justify-center px-6 pb-24 text-center">
+        <p className="text-base font-semibold leading-relaxed text-neutral-800">
+          No tienes perfil,{' '}
+          <Link to="/register" className="font-bold text-[#80902e] underline underline-offset-2">
+            Registrate aquí
+          </Link>
+        </p>
+      </div>
+    );
+  }
+
+  if (profileLoaded && !profile) {
     return (
       <div className="flex min-h-0 flex-1 flex-col items-center justify-center px-6 pb-24 text-center">
         <p className="text-base font-semibold leading-relaxed text-neutral-800">
