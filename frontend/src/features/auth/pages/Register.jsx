@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Header from '../../../shared/components/Header';
 import { hydrateMockAuthFromSession } from '../../../shared/lib/auth';
@@ -9,6 +9,7 @@ import { getAuthCooldownRemainingMs, startAuthRateLimit } from '../../../shared/
 
 function Register() {
   const navigate = useNavigate();
+  const submitLockRef = useRef(false);
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -28,6 +29,10 @@ function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (submitLockRef.current) {
+      return;
+    }
+
     const normalizedEmail = (email || '').trim().toLowerCase();
     const displayName = (username || normalizedEmail.split('@')[0] || 'usuario').trim();
     const cooldownRemaining = getAuthCooldownRemainingMs();
@@ -38,6 +43,7 @@ function Register() {
       return;
     }
 
+    submitLockRef.current = true;
     setIsSubmitting(true);
     setSubmitError('');
 
@@ -92,11 +98,14 @@ function Register() {
         const nextRemaining = getAuthCooldownRemainingMs();
         setRateLimitRemainingMs(nextRemaining);
         setSubmitError(`Demasiadas solicitudes. Espera ${Math.ceil(nextRemaining / 1000)}s.`);
+      } else if (error?.status === 404) {
+        setSubmitError('No se pudo completar el registro: un recurso requerido no respondió. Reintenta en un momento.');
       } else {
         setSubmitError(error?.message || 'No se pudo registrar.');
       }
     } finally {
       setIsSubmitting(false);
+      submitLockRef.current = false;
     }
   };
 

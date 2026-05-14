@@ -6,7 +6,8 @@ import logo from '../assets/icons/logo.png';
  */
 function Header({ compact = false }) {
   const headerHeightClass = compact ? 'h-[clamp(96px,24vw,122px)]' : 'h-[var(--zoa-header-height)]';
-  const logoHeightClass = compact ? 'h-[clamp(38px,10vw,64px)]' : 'h-[clamp(42px,11vw,120px)]';
+  // Aumenta considerablemente el tamaño del logo cuando se requiera
+  const logoHeightClass = compact ? 'h-[clamp(80px,30vw,220px)]' : 'h-[clamp(100px,35vw,260px)]';
 
   return (
     <header className={`relative z-30 w-[100vw] shrink-0 [margin-left:calc(50%-50vw)] ${headerHeightClass}`}>
@@ -23,7 +24,7 @@ function Header({ compact = false }) {
         <img
           src={logo}
           alt="Zoa"
-          className={`pointer-events-none absolute left-1/2 top-1/2 w-auto max-w-[96%] -translate-x-1/2 -translate-y-1/2 object-contain ${logoHeightClass} mix-blend-multiply`}
+          className={`pointer-events-none absolute left-1/2 top-1/2 w-auto max-w-[96%] -translate-x-1/2 -translate-y-1/2 object-contain ${logoHeightClass} `}
         />
       </div>
     </header>

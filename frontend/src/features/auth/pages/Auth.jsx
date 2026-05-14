@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, LogIn, UserPlus } from 'lucide-react';
 import Header from '../../../shared/components/Header';
@@ -10,6 +10,7 @@ import { getAuthCooldownRemainingMs, startAuthRateLimit } from '../../../shared/
 
 function AuthPage() {
   const navigate = useNavigate();
+  const submitLockRef = useRef(false);
   const [mode, setMode] = useState('login');
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -68,6 +69,10 @@ function AuthPage() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    if (submitLockRef.current) {
+      return;
+    }
+
     const normalizedEmail = email.trim();
     const displayName = (fullName || normalizedEmail.split('@')[0] || 'usuario').trim();
     const cooldownRemaining = getAuthCooldownRemainingMs();
@@ -78,6 +83,7 @@ function AuthPage() {
       return;
     }
 
+    submitLockRef.current = true;
     setIsSubmitting(true);
     setSubmitError('');
 
@@ -150,11 +156,14 @@ function AuthPage() {
         const nextRemaining = getAuthCooldownRemainingMs();
         setRateLimitRemainingMs(nextRemaining);
         setSubmitError(`Demasiadas solicitudes. Espera ${Math.ceil(nextRemaining / 1000)}s.`);
+      } else if (error?.status === 404) {
+        setSubmitError('No se pudo completar la solicitud: un recurso requerido no respondió. Reintenta en un momento.');
       } else {
         setSubmitError(error?.message || 'No se pudo autenticar.');
       }
     } finally {
       setIsSubmitting(false);
+      submitLockRef.current = false;
     }
   };
 
