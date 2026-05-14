@@ -14,7 +14,11 @@ import { buildPublicationCardFromDraft, savePendingPublicationDraft } from '../.
 const SCAN_ENDPOINT = 'https://zoa-5p6r.onrender.com/api/scan';
 
 function formatCoordinates(latitude, longitude) {
-  return 'UCAB Guayana';
+  if (latitude === null || latitude === undefined || longitude === null || longitude === undefined) {
+    return 'UCAB Guayana';
+  }
+
+  return `Latitud ${Number(latitude).toFixed(6)}, Longitud ${Number(longitude).toFixed(6)}`;
 }
 
 function AnalysisPage() {
