@@ -27,6 +27,7 @@ function AnalysisPage() {
   const [analysisState, setAnalysisState] = useState('loading');
   const [analysisError, setAnalysisError] = useState('');
   const [analysisData, setAnalysisData] = useState(null);
+  const [isLocationLoading, setIsLocationLoading] = useState(true);
   const [locationData, setLocationData] = useState({
     latitude: null,
     longitude: null,
@@ -71,28 +72,34 @@ function AnalysisPage() {
   useEffect(() => {
     if (!pendingScan) return;
 
+    let isActive = true;
+
     if (typeof navigator !== 'undefined' && navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
+          if (!isActive) return;
           setLocationData({
             latitude: position.coords.latitude,
             longitude: position.coords.longitude,
           });
+          setIsLocationLoading(false);
         },
         () => {
+          if (!isActive) return;
           setLocationData({
             latitude: null,
             longitude: null,
           });
+          setIsLocationLoading(false);
         },
         {
           enableHighAccuracy: false,
           timeout: 8000,
         },
       );
+    } else {
+      setIsLocationLoading(false);
     }
-
-    let isActive = true;
 
     async function analyzeImage() {
       try {
@@ -133,8 +140,50 @@ function AnalysisPage() {
     };
   }, [pendingScan]);
 
-  const handleGoToPublication = () => {
+  useEffect(() => {
+    if (analysisState !== 'ready') {
+      return;
+    }
+
+    if (locationData.latitude !== null || locationData.longitude !== null) {
+      setIsLocationLoading(false);
+    }
+  }, [analysisState, locationData.latitude, locationData.longitude]);
+
+  const handleGoToPublication = async () => {
     if (!draft) return;
+
+    if (isLocationLoading && typeof navigator !== 'undefined' && navigator.geolocation) {
+      const resolvedLocation = await new Promise((resolve) => {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            resolve({
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
+            });
+          },
+          () => resolve(locationData),
+          {
+            enableHighAccuracy: false,
+            timeout: 8000,
+          },
+        );
+      });
+
+      setLocationData(resolvedLocation);
+      if (resolvedLocation.latitude !== null || resolvedLocation.longitude !== null) {
+        setIsLocationLoading(false);
+      }
+
+      savePendingPublicationDraft({
+        ...draft,
+        location: resolvedLocation,
+        locationData: resolvedLocation,
+      });
+      clearPendingScan();
+      navigate('/publicacion?draft=1', { replace: true });
+      return;
+    }
 
     savePendingPublicationDraft(draft);
     clearPendingScan();
@@ -244,10 +293,11 @@ function AnalysisPage() {
               <button
                 type="button"
                 onClick={handleGoToPublication}
+                disabled={isLocationLoading}
                 className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-[#80902e] px-4 text-sm font-semibold text-white shadow-[0_12px_24px_rgba(128,144,46,0.28)]"
               >
                 <Upload size={16} />
-                Ir a publicación
+                {isLocationLoading ? 'Obteniendo ubicación...' : 'Ir a publicación'}
               </button>
             </div>
 

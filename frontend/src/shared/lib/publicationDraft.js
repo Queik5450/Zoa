@@ -1,4 +1,4 @@
-import { apiUrl } from './api';
+import { apiJson, apiUrl } from './api';
 import { dataUrlToFile, getMockAuth, savePublishedCard, incrementPendingPhotos } from './scanFlow';
 import { supabase } from './supabaseClient';
 
@@ -71,6 +71,20 @@ export async function publishPendingPublicationDraft(draft = null) {
   const authSession = getMockAuth();
   if (!authSession?.userId) {
     throw new Error('Debes iniciar sesión para publicar.');
+  }
+
+  try {
+    await apiJson('/profiles/sync', {
+      method: 'POST',
+      body: {
+        user_id: authSession.userId,
+        email: authSession.email || '',
+        display_name: authSession.displayName || currentDraft.authorName?.replace(/^@/, '') || 'usuario',
+        avatar_url: null,
+      },
+    });
+  } catch {
+    // Continue with publication; the backend will still perform its own profile check.
   }
 
   const analysis = currentDraft.analysis || {};

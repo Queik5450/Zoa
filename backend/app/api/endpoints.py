@@ -497,18 +497,9 @@ async def create_publication(
     except Exception as exc:
         print(f"Profile sync failed: {exc}")
         # do not block publication for profile sync, but log
-    # Ensure profile exists before inserting publication to satisfy FK / RLS requirements
-    try:
-        profile_check = _safe_query(
-            supabase.table(PROFILE_TABLE).select("id").eq("id", user_id).limit(1)
-        )
-        if not (profile_check and profile_check.data):
-            raise HTTPException(status_code=400, detail="User profile not found or not authorized to create publications.")
-    except HTTPException:
-        raise
-    except Exception as exc:
-        print(f"Profile existence check failed: {exc}")
-        raise HTTPException(status_code=500, detail="Failed to verify user profile before creating publication.")
+    # `_sync_profile` already upserts the user record; do not add a second
+    # existence gate here because it can race with the upsert and reject valid
+    # publication requests unnecessarily.
     species_id = _get_or_create_species_id(
         {
             "common_name": common_name,
