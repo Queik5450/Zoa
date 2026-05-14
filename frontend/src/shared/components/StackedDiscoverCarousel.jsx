@@ -37,7 +37,7 @@ function StackedPreviewCard({ card, onSelect, style }) {
   );
 }
 
-export default function StackedDiscoverCarousel({ cards, isScanning }) {
+export default function StackedDiscoverCarousel({ cards, isScanning, showControls = true }) {
   const stageRef = useRef(null);
   const gestureRef = useRef({ x: 0, y: 0, dragging: false, pointerId: null, moved: false });
   const suppressClickRef = useRef(false);
@@ -166,31 +166,33 @@ export default function StackedDiscoverCarousel({ cards, isScanning }) {
   return (
     <section className="relative z-10 w-full select-none" aria-label="Carrusel destacado">
       <div className="mx-auto w-full max-w-[min(100%,920px)]">
-        <div className="mb-3 grid grid-cols-[auto_1fr_auto] items-center gap-2 rounded-[22px] border border-white/65 bg-white/70 px-3 py-2 shadow-[0_10px_26px_rgba(0,0,0,0.08)] backdrop-blur-sm sm:mb-4 sm:px-4 sm:py-3">
-          <button
-            type="button"
-            aria-label="Anterior"
-            onClick={goPrev}
-            disabled={!hasNavigation}
-            className="flex h-10 w-10 items-center justify-center rounded-2xl border border-[#d8e1bd] bg-white text-[#596427] shadow-[0_8px_18px_rgba(0,0,0,0.1)] transition-transform transition-opacity hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 sm:h-11 sm:w-11"
-          >
-            <ChevronLeft size={20} />
-          </button>
+        {showControls ? (
+          <div className="mb-3 grid grid-cols-[auto_1fr_auto] items-center gap-2 rounded-[22px] border border-white/65 bg-white/70 px-3 py-2 shadow-[0_10px_26px_rgba(0,0,0,0.08)] backdrop-blur-sm sm:mb-4 sm:px-4 sm:py-3">
+            <button
+              type="button"
+              aria-label="Anterior"
+              onClick={goPrev}
+              disabled={!hasNavigation}
+              className="flex h-10 w-10 items-center justify-center rounded-2xl border border-[#d8e1bd] bg-white text-[#596427] shadow-[0_8px_18px_rgba(0,0,0,0.1)] transition-transform transition-opacity hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 sm:h-11 sm:w-11"
+            >
+              <ChevronLeft size={20} />
+            </button>
 
-          <div className="min-w-0 px-2 text-center text-[10px] font-semibold leading-tight tracking-wide text-[#5f6841] sm:text-[11px]">
-            Desliza para mover. Usa las flechas o el teclado para cambiar de tarjeta.
+            <div className="min-w-0 px-2 text-center text-[10px] font-semibold leading-tight tracking-wide text-[#5f6841] sm:text-[11px]">
+              Desliza para mover. Usa las flechas o el teclado para cambiar de tarjeta.
+            </div>
+
+            <button
+              type="button"
+              aria-label="Siguiente"
+              onClick={goNext}
+              disabled={!hasNavigation}
+              className="flex h-10 w-10 items-center justify-center rounded-2xl border border-[#d8e1bd] bg-white text-[#596427] shadow-[0_8px_18px_rgba(0,0,0,0.1)] transition-transform transition-opacity hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 sm:h-11 sm:w-11"
+            >
+              <ChevronRight size={20} />
+            </button>
           </div>
-
-          <button
-            type="button"
-            aria-label="Siguiente"
-            onClick={goNext}
-            disabled={!hasNavigation}
-            className="flex h-10 w-10 items-center justify-center rounded-2xl border border-[#d8e1bd] bg-white text-[#596427] shadow-[0_8px_18px_rgba(0,0,0,0.1)] transition-transform transition-opacity hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 sm:h-11 sm:w-11"
-          >
-            <ChevronRight size={20} />
-          </button>
-        </div>
+        ) : null}
 
         <div
           ref={stageRef}
@@ -200,7 +202,7 @@ export default function StackedDiscoverCarousel({ cards, isScanning }) {
           aria-label="Descubre publicaciones"
           onKeyDown={handleKeyDown}
           onPointerDown={handlePointerDown}
-          className="relative outline-none"
+          className="relative outline-none [--stack-top:38%] sm:[--stack-top:80%]"
           style={{
             width: 'min(100%, 920px)',
             height: 'clamp(560px, 76vh, 800px)',
@@ -234,7 +236,7 @@ export default function StackedDiscoverCarousel({ cards, isScanning }) {
                 transition: gestureRef.current.dragging ? 'none' : 'transform 320ms ease, opacity 320ms ease',
                 filter: offset === 0 ? 'none' : 'saturate(0.98) brightness(0.99)',
                 left: '50%',
-                top: '56%',
+                top: 'var(--stack-top)',
                 transformOrigin: 'center center',
               };
 

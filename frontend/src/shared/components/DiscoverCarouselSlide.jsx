@@ -109,7 +109,7 @@ function DiscoverCarouselSlide({ card, isScanning }) {
             }}
           >
             <div className="flex h-full flex-col">
-              <div className="relative flex-[5] overflow-hidden bg-neutral-200">
+              <div className="relative flex-[6] overflow-hidden bg-neutral-200 sm:flex-[5]">
                 <img src={card.image} alt={card.name} className="h-full w-full object-cover object-center" />
                 <p className="pointer-events-none absolute left-3 top-3 max-w-[85%] truncate text-[11px] font-bold text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.85)]">
                   Foto tomada por: {authorName.replace(/^@/, '')}
@@ -122,18 +122,18 @@ function DiscoverCarouselSlide({ card, isScanning }) {
                 ) : null}
               </div>
 
-              <div className="flex h-[34%] min-h-[112px] flex-col justify-center bg-white px-4 pb-3 pt-2">
+              <div className="flex h-[26%] min-h-[92px] flex-col justify-center bg-white px-4 pb-2 pt-2 sm:h-[34%] sm:min-h-[112px] sm:pb-3">
                 <div className="min-w-0">
-                  <span className="block truncate text-[22px] font-black leading-tight text-black">{card.name}</span>
+                  <span className="block truncate text-[20px] font-black leading-tight text-black sm:text-[22px]">{card.name}</span>
                 </div>
 
-                <div className="mt-1 flex w-full items-end justify-between gap-3">
+                <div className="mt-1 flex w-full items-end justify-between gap-2 sm:gap-3">
                   <div className="flex min-w-0 items-center gap-1 text-[13px] font-bold text-neutral-500">
                     <MapPin size={14} className="shrink-0 text-neutral-400" />
                     <span className="truncate leading-none">{scientificLabel}</span>
                   </div>
 
-                  <div className="flex items-center gap-3 text-[13px] font-bold text-neutral-500">
+                  <div className="flex items-center gap-2 text-[13px] font-bold text-neutral-500 sm:gap-3">
                     <button
                       type="button"
                       onClick={handleHeartClick}
