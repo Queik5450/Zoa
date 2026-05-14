@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ChevronDown, Search, X } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import { apiJson } from '../../../shared/lib/api';
 import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet';
 import L from 'leaflet';
@@ -115,9 +115,6 @@ function Map() {
 
       <form onSubmit={runSearch} className="relative z-10 shrink-0">
         <div className="flex items-center gap-2 rounded-[22px] border border-white/80 bg-white px-3 py-2.5 shadow-[0_10px_24px_rgba(0,0,0,0.10)]">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#f4f7e8] text-[#80902e]">
-            <ChevronDown className="h-5 w-5" aria-hidden />
-          </div>
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}

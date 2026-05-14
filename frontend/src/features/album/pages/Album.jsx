@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronDown, Search } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { savePendingPublicationDraft } from '../../../shared/lib/publicationDraft';
 import { supabase } from '../../../shared/lib/supabaseClient';
 
@@ -148,13 +148,6 @@ function Album() {
 
       <div className="shrink-0 px-4 pt-2">
         <div className="flex items-center overflow-hidden rounded-[10px] bg-white shadow-[0_4px_4px_rgba(0,0,0,0.25)] ring-1 ring-black/10">
-          <button
-            type="button"
-            className="flex h-[34px] w-[34px] shrink-0 items-center justify-center border-r border-[#bfbfbf] bg-white text-[#787878]"
-            aria-label="Abrir filtros"
-          >
-            <ChevronDown className="h-5 w-5" />
-          </button>
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}

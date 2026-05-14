@@ -42,14 +42,14 @@ function Profile() {
 
         if (!isActive) return;
 
-        if (statsData) {
-          setStats({
-            records_total: statsData.records_total ?? 0,
-            photos_total: statsData.photos_total ?? 0,
-            audios_total: statsData.audios_total ?? 0,
-            species_total: statsData.species_total ?? 0,
-          });
-        }
+        // Always set stats (use zeroes when the API returns null) so the UI
+        // leaves the loading state even if there is no stats record yet.
+        setStats({
+          records_total: statsData?.records_total ?? 0,
+          photos_total: statsData?.photos_total ?? 0,
+          audios_total: statsData?.audios_total ?? 0,
+          species_total: statsData?.species_total ?? 0,
+        });
 
         if (profileData) setProfile(profileData);
         else if (!profileData && auth) {
@@ -73,8 +73,8 @@ function Profile() {
             .map((item) => item.name || item.scientificName || 'Audio grabado')
             .slice(0, 6);
 
-          setPhotoItems(nextPhotoItems.slice(0, 6));
-          setAudioItems(nextAudioItems.slice(0, 6));
+          setPhotoItems(nextPhotoItems.length ? nextPhotoItems : FALLBACK_PHOTOS.slice(0, 6));
+          setAudioItems(nextAudioItems.length ? nextAudioItems : FALLBACK_AUDIOS.slice(0, 6));
         }
       } catch {
         if (!isActive) return;
