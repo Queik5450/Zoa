@@ -29,12 +29,12 @@ const cleanSvgColors = (svg, color) => {
 
 function NavItem({ active, svgRaw, iconSrc, label, onClick }) {
   const btnColorClass = active ? 'text-[#96b232]' : 'text-[#7B7B7B]';
-  const activeBg = active ? 'bg-white shadow-md ring-1 ring-[#e6f1c6]' : '';
+  const activeBg = active ? 'bg-white ring-1 ring-white shadow-none' : '';
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`appearance-none border-0 bg-transparent p-0 outline-none relative flex flex-col items-center justify-center pt-2 transition-all ${btnColorClass} hover:text-[#96b232] hover:scale-105 hover:bg-white/20 hover:rounded-lg active:scale-95 ${activeBg} ${
+      className={`appearance-none border-0 bg-transparent p-0 outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 relative flex flex-col items-center justify-center pt-2 transition-all ${btnColorClass} hover:text-[#96b232] hover:scale-105 hover:bg-white/20 hover:rounded-lg active:scale-95 ${activeBg} ${
         active ? 'opacity-100' : 'opacity-85'
       }`}
     >
@@ -48,13 +48,13 @@ function NavItem({ active, svgRaw, iconSrc, label, onClick }) {
           alt=""
           className={`absolute top-2 h-[26px] w-[26px] object-contain transition-all duration-150 ${
             active ? 'filter-none opacity-100' : 'grayscale contrast-75 opacity-80'
-          } hover:grayscale-0 hover:opacity-100`}
+          } hover:grayscale-0 hover:opacity-100 focus:outline-none`}
           aria-hidden
         />
       ) : null}
       {svgRaw ? (
         <span
-          className="absolute top-2 flex h-[26px] w-[26px] items-center justify-center bg-transparent [&>svg]:h-full [&>svg]:w-full"
+          className="absolute top-2 flex h-[26px] w-[26px] items-center justify-center bg-transparent [&>svg]:h-full [&>svg]:w-full focus:outline-none"
           aria-hidden
           dangerouslySetInnerHTML={{ __html: cleanSvgColors(svgRaw, 'currentColor') }}
         />

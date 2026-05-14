@@ -26,12 +26,12 @@ const cleanSvgColors = (svg, color) => {
 
 function NavItem({ active, svgRaw, iconSrc, label, onClick }) {
   const color = active ? ACCENT : MUTED;
-  const activeBg = active ? 'bg-white shadow-md ring-1 ring-[#e6f1c6]' : '';
+  const activeBg = active ? 'bg-white ring-1 ring-white shadow-none' : '';
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`appearance-none border-0 bg-transparent p-0 text-inherit outline-none relative flex flex-col items-center justify-center pt-2 transition-all hover:opacity-100 hover:scale-105 hover:bg-white/20 hover:rounded-lg active:scale-95 ${activeBg} ${
+      className={`appearance-none border-0 bg-transparent p-0 text-inherit outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 relative flex flex-col items-center justify-center pt-2 transition-all hover:opacity-100 hover:scale-105 hover:bg-white/20 hover:rounded-lg active:scale-95 ${activeBg} ${
         active ? 'opacity-100' : 'opacity-80 hover:text-green-500'
       }`}
     >
@@ -40,11 +40,11 @@ function NavItem({ active, svgRaw, iconSrc, label, onClick }) {
         aria-hidden
       />
       {iconSrc ? (
-        <img src={iconSrc} alt="" className="absolute top-2 h-[26px] w-[26px] object-contain" aria-hidden />
+        <img src={iconSrc} alt="" className="absolute top-2 h-[26px] w-[26px] object-contain focus:outline-none" aria-hidden />
       ) : null}
       {svgRaw ? (
         <span
-          className="absolute top-2 flex h-[26px] w-[26px] items-center justify-center bg-transparent [&>svg]:h-full [&>svg]:w-full"
+          className="absolute top-2 flex h-[26px] w-[26px] items-center justify-center bg-transparent [&>svg]:h-full [&>svg]:w-full focus:outline-none"
           aria-hidden
           dangerouslySetInnerHTML={{ __html: cleanSvgColors(svgRaw, color) }}
         />
