@@ -1,5 +1,5 @@
 ﻿import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { HashRouter, Routes, Route } from 'react-router-dom';
 import MobileShell from './shared/layouts/MobileShell';
 import Home from './features/home/pages/Home';
 import AuthPage from './features/auth/pages/Auth';
@@ -17,7 +17,7 @@ import Register from './features/auth/pages/Register';
 
 function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <Routes>
         <Route path="/" element={<MobileShell />}>
           <Route index element={<Home />} />
@@ -35,7 +35,7 @@ function App() {
         <Route path="/analysis" element={<AnalysisPage />} />
         <Route path="/menu" element={<MenuPage />} />
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 

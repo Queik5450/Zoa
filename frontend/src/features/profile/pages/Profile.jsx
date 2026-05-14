@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { getMockAuth } from '../../../shared/lib/scanFlow';
+import { getMockAuth, getPendingStats } from '../../../shared/lib/scanFlow';
 import { apiJson, apiUrl } from '../../../shared/lib/api';
 import PerfilUsuario from '../../../PerfilZoa/src/components/PerfilUsuario';
 import '../../../PerfilZoa/src/global.css';
@@ -35,9 +35,12 @@ function Profile() {
 
         // Always set stats (use zeroes when the API returns null) so the UI
         // leaves the loading state even if there is no stats record yet.
+        const pending = getPendingStats();
+        const pendingPhotos = (pending && pending[userId] && pending[userId].photos) ? pending[userId].photos : 0;
+
         setStats({
           records_total: statsData?.records_total ?? 0,
-          photos_total: statsData?.photos_total ?? 0,
+          photos_total: (statsData?.photos_total ?? 0) + pendingPhotos,
           audios_total: statsData?.audios_total ?? 0,
           species_total: statsData?.species_total ?? 0,
         });

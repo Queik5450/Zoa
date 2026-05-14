@@ -1,5 +1,5 @@
 import { apiUrl } from './api';
-import { dataUrlToFile, getMockAuth } from './scanFlow';
+import { dataUrlToFile, getMockAuth, savePublishedCard, incrementPendingPhotos } from './scanFlow';
 import { supabase } from './supabaseClient';
 
 const PENDING_PUBLICATION_KEY = 'zoa.pendingPublication';
@@ -142,6 +142,30 @@ export async function publishPendingPublicationDraft(draft = null) {
   } catch (err) {
     throw new Error(err?.message || 'No se pudo publicar la observación.');
   }
+  // Save a client-side copy so feeds update immediately.
+  try {
+    savePublishedCard({
+      id: published?.id || clientPubId,
+      image: published?.media_url || published?.mediaUrl || '',
+      name: published?.common_name || published?.name || currentDraft.name || 'Desconocido',
+      species: published?.common_name || currentDraft.name || 'Especie',
+      scientificName: published?.scientific_name || currentDraft.scientificName || '',
+      mediaType: published?.media_type || currentDraft.mediaType || 'photo',
+      latitude: published?.latitude ?? location?.latitude,
+      longitude: published?.longitude ?? location?.longitude,
+    });
+  } catch (err) {
+    // ignore local save errors
+  }
+
+  try {
+    if ((published?.media_type || currentDraft.mediaType) === 'photo') {
+      incrementPendingPhotos(authSession.userId, 1);
+    }
+  } catch (err) {
+    // ignore
+  }
+
   clearPendingPublicationDraft();
   return published;
 }

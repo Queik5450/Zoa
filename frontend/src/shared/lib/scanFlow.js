@@ -94,3 +94,26 @@ export function saveLocalGalleryItem(item) {
   const currentItems = getLocalGalleryItems();
   writeJson(LOCAL_GALLERY_KEY, [item, ...currentItems]);
 }
+
+const PENDING_STATS_KEY = 'zoa.pendingStats';
+
+export function getPendingStats() {
+  return readJson(PENDING_STATS_KEY, {});
+}
+
+export function incrementPendingPhotos(userId, delta = 1) {
+  if (!userId) return;
+  const all = getPendingStats();
+  const prev = all[userId] || { photos: 0 };
+  prev.photos = (prev.photos || 0) + delta;
+  all[userId] = prev;
+  writeJson(PENDING_STATS_KEY, all);
+}
+
+export function clearPendingStats(userId) {
+  if (!userId) return;
+  const all = getPendingStats();
+  if (!all[userId]) return;
+  delete all[userId];
+  writeJson(PENDING_STATS_KEY, all);
+}
