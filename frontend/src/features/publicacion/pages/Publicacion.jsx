@@ -202,7 +202,6 @@ function Publicacion() {
               <h2 className="text-[34px] font-black leading-[1.05] text-black">{card.name}</h2>
               <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-[10px] font-semibold text-[#7b7b7b]">
                 <span>fecha: {publishedAtLabel}</span>
-                <span>hora: {publishedAtLabel.includes(',') ? publishedAtLabel.split(',').pop().trim() : 'sin hora'}</span>
               </div>
             </div>
 

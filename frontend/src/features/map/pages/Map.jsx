@@ -55,10 +55,22 @@ function Map() {
     let isActive = true;
 
     async function loadMapPublications() {
+      const endpoints = ['/map/publications?limit=100', '/publications/feed?limit=100'];
+
       try {
-        const response = await apiJson('/map/publications?limit=100');
-        if (!isActive) return;
-        setPublications(Array.isArray(response) ? response : []);
+        for (const endpoint of endpoints) {
+          try {
+            const response = await apiJson(endpoint);
+            if (!isActive) return;
+            setPublications(Array.isArray(response) ? response : []);
+            return;
+          } catch (error) {
+            if (!isActive) return;
+            if (endpoint === endpoints[endpoints.length - 1]) {
+              throw error;
+            }
+          }
+        }
       } catch {
         if (!isActive) return;
         setPublications([]);
@@ -130,7 +142,7 @@ function Map() {
   };
 
   return (
-    <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-[#edf7f9] px-3 pb-3 pt-2 sm:px-4 sm:pb-4 sm:pt-3">
+    <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-[#edf7f9] px-3 pb-[calc(var(--zoa-bottom-height)+12px)] pt-2 sm:px-4 sm:pb-[calc(var(--zoa-bottom-height)+16px)] sm:pt-3">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(193,225,79,0.14),transparent_34%),linear-gradient(180deg,rgba(255,255,255,0.54)_0%,rgba(237,247,249,0.15)_32%,rgba(237,247,249,0.68)_100%)]" />
 
       <form onSubmit={runSearch} className="relative z-10 shrink-0">
@@ -198,12 +210,7 @@ function Map() {
         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.02)_0%,rgba(255,255,255,0)_48%,rgba(0,0,0,0.06)_100%)]" />
       </div>
 
-      {!searchActive ? (
-        <div className="relative z-10 mt-3 overflow-hidden rounded-t-[24px] border border-white/70 bg-white/95 px-4 py-3 text-center shadow-[0_-4px_20px_rgba(0,0,0,0.08)] backdrop-blur-sm sm:mt-4 sm:px-5">
-          <p className="text-xs font-bold text-neutral-700">{publications.length} publicaciones con ubicación</p>
-          <p className="mt-0.5 text-[11px] text-neutral-500">Busca animal, especie o zona para filtrar pins reales</p>
-        </div>
-      ) : (
+      {searchActive ? (
         <section className="relative z-10 mt-3 flex max-h-[min(44vh,400px)] min-h-0 flex-col overflow-hidden rounded-t-[28px] border border-neutral-100 bg-white shadow-[0_-8px_30px_rgba(0,0,0,0.12)] sm:max-h-[min(48vh,430px)]">
           <div className="shrink-0 px-4 pb-2 pt-3">
             <div className="mx-auto mb-2 h-1.5 w-12 rounded-full bg-neutral-200" />
@@ -245,7 +252,6 @@ function Map() {
                 </p>
               </div>
             </article>
-
             <article className="mt-3 rounded-2xl border border-neutral-200 bg-white p-3 shadow-sm">
               <h3 className="text-xs font-bold uppercase tracking-wide text-[#80902e]">La zona</h3>
               <p className="mt-2 text-sm leading-relaxed text-neutral-800">
@@ -255,7 +261,6 @@ function Map() {
 
             <article className="mt-3 rounded-2xl border border-neutral-200 bg-[#f8faf4] p-3 shadow-sm">
               <h3 className="text-xs font-bold uppercase tracking-wide text-[#80902e]">Animales en la zona</h3>
-              <p className="mt-2 text-sm leading-relaxed text-neutral-800">Publicaciones del mundo para esta especie o zona.</p>
               <ul className="mt-2 list-inside list-disc text-sm text-neutral-700">
                 {filteredPublications.slice(0, 3).map((item) => (
                   <li key={item.id}>{item.name || item.scientificName || 'Publicación sin nombre'}</li>
@@ -264,7 +269,7 @@ function Map() {
             </article>
           </div>
         </section>
-      )}
+      ) : null}
     </div>
   );
 }

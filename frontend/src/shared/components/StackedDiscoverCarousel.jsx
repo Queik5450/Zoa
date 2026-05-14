@@ -19,17 +19,17 @@ function StackedPreviewCard({ card, onSelect, style }) {
       aria-label={`Ver ${card.name}`}
     >
       <img src={card.image} alt={card.name} className="absolute inset-0 h-full w-full object-cover" />
-      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(17,20,11,0.08)_0%,rgba(17,20,11,0.14)_50%,rgba(17,20,11,0.78)_100%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(17,20,11,0.06)_0%,rgba(17,20,11,0.1)_52%,rgba(17,20,11,0.7)_100%)]" />
       <div className="absolute inset-x-0 top-0 p-3">
         <p className="max-w-[82%] truncate text-[11px] font-semibold uppercase tracking-[0.18em] text-white/90 drop-shadow-[0_1px_2px_rgba(0,0,0,0.65)]">
           Foto tomada por: {card.authorName?.replace(/^@/, '') || 'USUARIO'}
         </p>
       </div>
-      <div className="absolute inset-x-0 bottom-0 p-4 text-white">
-        <p className="truncate text-[clamp(1.2rem,4vw,1.7rem)] font-black leading-none drop-shadow-[0_2px_6px_rgba(0,0,0,0.45)]">
+      <div className="absolute inset-x-0 bottom-0 bg-white px-4 pb-4 pt-3 text-left shadow-[0_-10px_22px_rgba(0,0,0,0.08)]">
+        <p className="truncate text-[clamp(1.05rem,3.4vw,1.45rem)] font-black leading-tight text-black">
           {card.name}
         </p>
-        <p className="mt-1 truncate text-[clamp(0.72rem,2.2vw,0.92rem)] font-medium text-white/86">
+        <p className="mt-0.5 truncate text-[clamp(0.72rem,2.1vw,0.9rem)] font-bold text-neutral-500">
           {card.scientificName || card.species}
         </p>
       </div>

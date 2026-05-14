@@ -109,7 +109,7 @@ function DiscoverCarouselSlide({ card, isScanning }) {
             }}
           >
             <div className="flex h-full flex-col">
-              <div className="relative flex-[6] overflow-hidden bg-neutral-200 sm:flex-[5]">
+              <div className="relative flex-[5] overflow-hidden bg-neutral-200 sm:flex-[5]">
                 <img src={card.image} alt={card.name} className="h-full w-full object-cover object-center" />
                 <p className="pointer-events-none absolute left-3 top-3 max-w-[85%] truncate text-[11px] font-bold text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.85)]">
                   Foto tomada por: {authorName.replace(/^@/, '')}
@@ -122,25 +122,25 @@ function DiscoverCarouselSlide({ card, isScanning }) {
                 ) : null}
               </div>
 
-              <div className="flex h-[26%] min-h-[92px] flex-col justify-center bg-white px-4 pb-2 pt-2 sm:h-[34%] sm:min-h-[112px] sm:pb-3">
+              <div className="flex min-h-[92px] flex-none flex-col justify-start bg-white px-4 py-3 sm:min-h-[100px]">
                 <div className="min-w-0">
                   <span className="block truncate text-[20px] font-black leading-tight text-black sm:text-[22px]">{card.name}</span>
                 </div>
 
-                <div className="mt-1 flex w-full items-end justify-between gap-2 sm:gap-3">
-                  <div className="flex min-w-0 items-center gap-1 text-[13px] font-bold text-neutral-500">
+                <div className="mt-0.5 flex w-full items-center justify-between gap-2 text-[12px] font-bold text-neutral-500 sm:text-[13px]">
+                  <div className="flex min-w-0 items-center gap-1.5">
                     <MapPin size={14} className="shrink-0 text-neutral-400" />
                     <span className="truncate leading-none">{scientificLabel}</span>
                   </div>
 
-                  <div className="flex items-center gap-2 text-[13px] font-bold text-neutral-500 sm:gap-3">
+                  <div className="flex shrink-0 items-center gap-2 text-[12px] font-bold text-neutral-500 sm:gap-3 sm:text-[13px]">
                     <button
                       type="button"
                       onClick={handleHeartClick}
                       className="flex items-center gap-1 transition-transform active:scale-95"
                     >
                       <Heart
-                        size={18}
+                        size={16}
                         className={cn(
                           'transition-colors',
                           isLiked ? 'fill-[#2eae48] text-[#2eae48]' : 'text-[#2eae48]',
@@ -153,7 +153,7 @@ function DiscoverCarouselSlide({ card, isScanning }) {
                       onClick={handleCommentsClick}
                       className="flex items-center gap-1 transition-transform active:scale-95"
                     >
-                      <MessageSquare size={18} className="fill-neutral-500 text-neutral-500" />
+                      <MessageSquare size={16} className="fill-neutral-500 text-neutral-500" />
                       <span>{displayedComments}</span>
                     </button>
                   </div>
