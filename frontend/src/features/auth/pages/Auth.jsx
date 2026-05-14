@@ -12,7 +12,6 @@ function AuthPage() {
   const navigate = useNavigate();
   const submitLockRef = useRef(false);
   const [mode, setMode] = useState('login');
-  const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitError, setSubmitError] = useState('');
@@ -74,12 +73,7 @@ function AuthPage() {
     }
 
     const normalizedEmail = email.trim();
-    const displayName = (fullName || '').trim();
-
-    if (!displayName) {
-      setSubmitError('Por favor ingresa tu nombre.');
-      return;
-    }
+    const displayName = (normalizedEmail.split('@')[0] || 'usuario').trim();
     const cooldownRemaining = getAuthCooldownRemainingMs();
 
     if (cooldownRemaining > 0) {
@@ -215,17 +209,7 @@ function AuthPage() {
           onSubmit={handleSubmit}
           className="mx-auto mt-6 w-full space-y-4 rounded-3xl border-2 border-black/10 bg-[#80902e] p-6 shadow-[0_16px_40px_rgba(128,144,46,0.35)]"
         >
-          <div>
-            <label className="mb-1.5 block text-xs font-semibold text-white">Nombre</label>
-            <input
-              value={fullName}
-              onChange={(event) => setFullName(event.target.value)}
-              type="text"
-              placeholder="Tu nombre o usuario"
-              required
-              className="h-12 w-full rounded-2xl border border-black/5 bg-white px-4 text-sm text-black shadow-[inset_0_2px_6px_rgba(0,0,0,0.06)] outline-none placeholder:text-neutral-400"
-            />
-          </div>
+          {/* Nombre eliminado: no requerido */}
 
           <div>
             <label className="mb-1.5 block text-xs font-semibold text-white">Correo</label>
