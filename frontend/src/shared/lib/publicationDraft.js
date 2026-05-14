@@ -5,11 +5,16 @@ import { supabase } from './supabaseClient';
 const PENDING_PUBLICATION_KEY = 'zoa.pendingPublication';
 
 function formatCoordinates(latitude, longitude) {
-  if (latitude === null || latitude === undefined || longitude === null || longitude === undefined) {
-    return 'Ubicación no disponible';
+  return 'UCAB Guayana';
+}
+
+function toCoordinate(value) {
+  if (value === null || value === undefined || value === '') {
+    return null;
   }
 
-  return `Latitud ${Number(latitude).toFixed(6)}, Longitud ${Number(longitude).toFixed(6)}`;
+  const numericValue = Number(value);
+  return Number.isFinite(numericValue) ? numericValue : null;
 }
 
 function readJson(key, fallbackValue) {
@@ -44,8 +49,8 @@ export function buildPublicationCardFromDraft(draft, authSession = getMockAuth()
   const analysis = draft.analysis || {};
   const location = draft.location || {};
   const displayName = authSession?.displayName || draft.authorName?.replace(/^@/, '') || 'usuario';
-  const latitude = Number(location.latitude);
-  const longitude = Number(location.longitude);
+  const latitude = toCoordinate(location.latitude);
+  const longitude = toCoordinate(location.longitude);
 
   return {
     id: draft.id || analysis.id || `draft-${Date.now()}`,
