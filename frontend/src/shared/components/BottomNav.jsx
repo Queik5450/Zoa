@@ -164,7 +164,7 @@ function BottomNav() {
         <path d="M141.601 13.9629C150.416 22.7978 158.193 28.809 167.59 32.916C177.067 37.0578 188.12 39.2322 203.425 40.4971L203.49 40.502L203.556 40.499C217.209 39.8456 225.498 38.1983 234.207 34.1572C242.804 30.1683 251.805 23.8429 266.815 13.9727L404 1.09863V77H1V1.0957L141.601 13.9629Z" fill="white" stroke="#7B7B7B" strokeWidth="2" />
       </svg>
 
-      <div className="absolute inset-x-0 bottom-0 flex h-[calc(var(--zoa-bottom-height)-16px)] w-full items-end px-2 pb-1">
+      <div className="absolute inset-x-0 bottom-0 flex h-[calc(var(--zoa-bottom-height)-16px)] w-full items-end px-2 pb-4">
         <div className="flex w-[40%] items-end justify-around pr-1">
           <NavItem active={isHome} svgRaw={homeSvg} label="Inicio" onClick={() => navigate('/')} />
           <NavItem active={isMap} svgRaw={busquedaSvg} label="Busqueda" onClick={() => navigate('/map')} />
