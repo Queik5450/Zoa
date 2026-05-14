@@ -133,7 +133,7 @@ const PerfilUsuario = ({ className = "" }) => {
       </section>
       <section className="self-stretch flex flex-col items-end pt-0 px-[153px] pb-[13.5px] box-border gap-3 max-w-full shrink-0">
         <div className="mr-[-172px] w-[440px] flex flex-col items-start max-w-[459%] shrink-0">
-          <div className="self-stretch flex items-start [row-gap:20px] mq382:flex-wrap">
+          <div className="self-stretch flex items-start [row-gap:20px] max-[382px]:flex-wrap">
             <div className="h-[117px] w-[157px] relative bg-[#d9d9d9]" />
             <img
               className="w-[147px] relative max-h-full object-cover"
@@ -143,7 +143,7 @@ const PerfilUsuario = ({ className = "" }) => {
             />
             <div className="h-[117px] w-[132px] relative bg-[#d9d9d9]" />
           </div>
-          <div className="self-stretch flex items-center [row-gap:20px] mq382:flex-wrap">
+          <div className="self-stretch flex items-center [row-gap:20px] max-[382px]:flex-wrap">
             <img
               className="h-[114px] w-[156px] relative object-cover"
               loading="lazy"
