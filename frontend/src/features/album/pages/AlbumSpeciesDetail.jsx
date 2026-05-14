@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../../../shared/lib/supabaseClient';
 import PublicationFlipCard from '../../../shared/components/PublicationFlipCard';
+import SpeechButton from '../../../shared/components/SpeechButton';
 
 const FALLBACK_MEDIA = 'https://1000marcas.net/wp-content/uploads/2025/04/Signo-de-interrogacion.png';
 
@@ -130,7 +131,16 @@ function AlbumSpeciesDetail() {
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-[#edf7f9] pb-[calc(var(--zoa-bottom-height)+16px)]">
       <div className="px-4 pb-1 pt-2">
-        <h2 className="text-[35px] font-bold leading-[1] text-black">{species?.common_name}</h2>
+        <div className="flex items-start justify-between gap-3">
+          <h2 className="text-[35px] font-bold leading-[1] text-black">{species?.common_name}</h2>
+          <SpeechButton
+            text={`${species?.common_name || 'Especie'} . Nombre científico ${species?.scientific_name || ''}. ${species?.description || 'Sin descripción disponible.'}`}
+            label="Escuchar"
+            stopLabel="Detener"
+            lang="es-VE"
+            className="px-4 py-3 text-sm"
+          />
+        </div>
         <p className="mt-1 text-[15px] font-semibold text-black">Nombre Científico: {species?.scientific_name}</p>
       </div>
 

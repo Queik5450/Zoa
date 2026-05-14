@@ -1,6 +1,7 @@
 import React from 'react';
 import { MapPin, Play } from 'lucide-react';
 import { useParams } from 'react-router-dom';
+import SpeechButton from '../../../shared/components/SpeechButton';
 
 const MAP_IMG =
   'https://images.unsplash.com/photo-1569336415962-a056bdedbe8f?auto=format&fit=crop&w=900&q=80';
@@ -11,7 +12,16 @@ function AlbumImageDetail() {
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-[#edf7f9] pb-[calc(var(--zoa-bottom-height)+16px)]">
       <div className="px-4 pb-2 pt-2">
-        <h2 className="text-[35px] font-bold leading-[1] text-black">Nombre Imagen</h2>
+        <div className="flex items-start justify-between gap-3">
+          <h2 className="text-[35px] font-bold leading-[1] text-black">Nombre Imagen</h2>
+          <SpeechButton
+            text="Nombre Imagen. Localizado en Parque Nacional Canaima. Ver en realidad aumentada disponible."
+            label="Escuchar"
+            stopLabel="Detener"
+            lang="es-VE"
+            className="px-4 py-3 text-sm"
+          />
+        </div>
         <div className="mt-1 flex gap-4 text-[10px] font-semibold text-[#7b7b7b]">
           <span>fecha: mayo 09/2026</span>
           <span>hora: 4:43pm</span>

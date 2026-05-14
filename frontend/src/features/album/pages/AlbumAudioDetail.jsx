@@ -1,6 +1,7 @@
 import React from 'react';
 import { MapPin, Play } from 'lucide-react';
 import { useParams } from 'react-router-dom';
+import SpeechButton from '../../../shared/components/SpeechButton';
 
 const MAP_IMG =
   'https://images.unsplash.com/photo-1569336415962-a056bdedbe8f?auto=format&fit=crop&w=900&q=80';
@@ -25,7 +26,16 @@ function AlbumAudioDetail() {
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-[#eef3f8] pb-4">
       <div className="px-4 pb-2 pt-1">
-        <h2 className="text-xl font-black text-black">Nombre Audio</h2>
+        <div className="flex items-start justify-between gap-3">
+          <h2 className="text-xl font-black text-black">Nombre Audio</h2>
+          <SpeechButton
+            text="Nombre Audio. Grabado por Carlos Mata. Parque Nacional Canaima."
+            label="Escuchar"
+            stopLabel="Detener"
+            lang="es-VE"
+            className="px-4 py-3 text-sm"
+          />
+        </div>
         <p className="mt-1 text-xs font-medium text-neutral-500">
           fecha: mayo 09/2026 <span className="mx-2">·</span> hora: 4:43pm
         </p>

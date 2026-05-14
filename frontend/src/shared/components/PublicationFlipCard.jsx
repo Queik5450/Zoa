@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Loader2, MapPin } from 'lucide-react';
+import SpeechButton from './SpeechButton';
 
 function getScrollableParent(node) {
   let current = node instanceof Element ? node.parentElement : null;
@@ -139,7 +140,16 @@ function PublicationFlipCard({ card, isScanning = false, onOpen }) {
           >
             <h2 className="mb-4 pt-1 text-2xl font-extrabold tracking-tight text-black">{title}</h2>
             <div className="mb-4 min-h-0 flex-1 text-left">
-              <h3 className="mb-2 text-base font-bold text-black">Descripción</h3>
+              <div className="mb-2 flex items-center justify-between gap-3">
+                <h3 className="text-base font-bold text-black">Descripción</h3>
+                <SpeechButton
+                  text={`${title}. ${description}. ${locationLabel}`}
+                  label="Escuchar"
+                  stopLabel="Detener"
+                  lang="es-VE"
+                  className="px-4 py-3 text-sm"
+                />
+              </div>
               <p className="custom-scrollbar max-h-[220px] overflow-y-auto break-words text-[15px] font-medium leading-snug text-black">
                 {description}
               </p>

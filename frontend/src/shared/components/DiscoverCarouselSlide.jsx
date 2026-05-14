@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Heart, Loader2, MapPin, MessageSquare, Send, X } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import SpeechButton from './SpeechButton';
 
 function cn(...inputs) {
   return twMerge(clsx(inputs));
@@ -174,7 +175,16 @@ function DiscoverCarouselSlide({ card, isScanning }) {
           >
             <h2 className="mb-4 pt-1 text-2xl font-extrabold tracking-tight text-black">{card.name}</h2>
             <div className="mb-4 min-h-0 flex-1 text-left">
-              <h3 className="mb-2 text-base font-bold text-black">Descripción</h3>
+              <div className="mb-2 flex items-center justify-between gap-3">
+                <h3 className="text-base font-bold text-black">Descripción</h3>
+                <SpeechButton
+                  text={[card.name, card.description, card.location].filter(Boolean).join('. ')}
+                  label="Escuchar"
+                  stopLabel="Detener"
+                  lang="es-VE"
+                  className="px-4 py-3 text-sm"
+                />
+              </div>
               <p className="custom-scrollbar max-h-[220px] overflow-y-auto break-words text-[15px] font-medium leading-snug text-black">
                 {card.description}
               </p>
