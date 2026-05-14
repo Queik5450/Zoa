@@ -208,7 +208,7 @@ function BottomNav() {
             try {
               const dataUrl = await fileToDataUrl(file);
               savePendingScan({ name: file.name, dataUrl });
-              navigate('/analysis');
+              navigate(`/analysis?scan=${Date.now()}`);
             } catch (error) {
               console.error('Error al procesar la imagen:', error);
             } finally {

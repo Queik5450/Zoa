@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { CheckCircle2, Loader2, Upload, X } from 'lucide-react';
 import {
   clearPendingScan,
@@ -23,7 +23,9 @@ function formatCoordinates(latitude, longitude) {
 
 function AnalysisPage() {
   const navigate = useNavigate();
-  const [pendingScan] = useState(() => getPendingScan());
+  const location = useLocation();
+  const analysisRouteSignature = `${location.key || ''}|${location.search || ''}`;
+  const [pendingScan, setPendingScan] = useState(() => getPendingScan());
   const [analysisState, setAnalysisState] = useState('loading');
   const [analysisError, setAnalysisError] = useState('');
   const [analysisData, setAnalysisData] = useState(null);
@@ -54,6 +56,19 @@ function AnalysisPage() {
       }
     : null;
   const previewCard = draft ? buildPublicationCardFromDraft(draft, authSession) : null;
+
+  useEffect(() => {
+    const nextPendingScan = getPendingScan();
+    setPendingScan(nextPendingScan);
+    setAnalysisState(nextPendingScan ? 'loading' : 'error');
+    setAnalysisError(nextPendingScan ? '' : 'No se encontró una foto pendiente para analizar.');
+    setAnalysisData(null);
+    setLocationData({
+      latitude: null,
+      longitude: null,
+    });
+    setIsLocationLoading(true);
+  }, [analysisRouteSignature]);
 
   useEffect(() => {
     const authSession = getMockAuth();
