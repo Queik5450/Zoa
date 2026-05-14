@@ -1,6 +1,20 @@
 import React, { useState } from 'react';
 import { Loader2, MapPin } from 'lucide-react';
 
+function getScrollableParent(node) {
+  let current = node instanceof Element ? node.parentElement : null;
+
+  while (current) {
+    const style = window.getComputedStyle(current);
+    const canScrollY = /(auto|scroll)/.test(style.overflowY) && current.scrollHeight > current.clientHeight;
+
+    if (canScrollY) return current;
+    current = current.parentElement;
+  }
+
+  return null;
+}
+
 function PublicationFlipCard({ card, isScanning = false, onOpen }) {
   const [isFlipped, setIsFlipped] = useState(false);
 
@@ -47,6 +61,20 @@ function PublicationFlipCard({ card, isScanning = false, onOpen }) {
           }}
         >
           <div
+        onWheel={(event) => {
+          if (Math.abs(event.deltaY) < Math.abs(event.deltaX)) return;
+
+          const target = event.target instanceof Element ? event.target : null;
+          const innerScrollable = target ? getScrollableParent(target) : null;
+
+          if (innerScrollable && event.currentTarget.contains(innerScrollable)) return;
+
+          const scrollableParent = getScrollableParent(event.currentTarget);
+          if (!scrollableParent) return;
+
+          scrollableParent.scrollTop += event.deltaY;
+          event.preventDefault();
+        }}
             className="absolute inset-0 overflow-hidden rounded-[18px] bg-white shadow-[0_10px_28px_rgba(0,0,0,0.14)]"
             style={{
               backfaceVisibility: 'hidden',

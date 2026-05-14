@@ -4,6 +4,20 @@ import { ChevronDown, Search } from 'lucide-react';
 import { savePendingPublicationDraft } from '../../../shared/lib/publicationDraft';
 import { supabase } from '../../../shared/lib/supabaseClient';
 
+function getScrollableParent(node) {
+  let current = node instanceof Element ? node.parentElement : null;
+
+  while (current) {
+    const style = window.getComputedStyle(current);
+    const canScrollY = /(auto|scroll)/.test(style.overflowY) && current.scrollHeight > current.clientHeight;
+
+    if (canScrollY) return current;
+    current = current.parentElement;
+  }
+
+  return null;
+}
+
 function Album() {
   const navigate = useNavigate();
   const [tab, setTab] = useState('animales');
@@ -195,6 +209,15 @@ function Album() {
               key={item.id}
               type="button"
               onClick={() => navigate(`/album/especie/${item.speciesId}`, { state: { fromAlbum: true } })}
+              onWheel={(event) => {
+                if (Math.abs(event.deltaY) < Math.abs(event.deltaX)) return;
+
+                const scrollableParent = getScrollableParent(event.currentTarget);
+                if (!scrollableParent) return;
+
+                scrollableParent.scrollTop += event.deltaY;
+                event.preventDefault();
+              }}
               className="group relative aspect-[1.04] overflow-hidden rounded-[20px] bg-neutral-300 text-left shadow-[0_4px_4px_rgba(0,0,0,0.25)] outline-none focus-visible:ring-2 focus-visible:ring-[#80902e] focus-visible:ring-offset-2"
             >
               <img

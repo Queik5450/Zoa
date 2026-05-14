@@ -30,19 +30,19 @@ function AnalysisPage() {
   const draft = analysisData
     ? {
         id: analysisData.id || pendingScan?.name || 'preview-publication',
-        name: analysisData.common_name || 'Desconocido',
-        species: analysisData.common_name || 'Especie',
-        scientificName: analysisData.scientific_name || '',
-        authorName: `@${displayName}`,
-        description: analysisData.description || 'Sin descripción disponible.',
-        location: locationData.label || 'Ubicación actual',
-        likes: '1k',
-        comments: '100',
-        dataUrl: pendingScan?.dataUrl || '',
-        fileName: pendingScan?.name || 'scan.jpg',
-        mediaType: 'photo',
-        analysis: analysisData,
-        locationData,
+          name: analysisData.common_name || 'Desconocido',
+          species: analysisData.common_name || 'Especie',
+          scientificName: analysisData.scientific_name || '',
+          authorName: `@${displayName}`,
+          description: analysisData.description || 'Sin descripción disponible.',
+          location: locationData,
+          likes: '1k',
+          comments: '100',
+          dataUrl: pendingScan?.dataUrl || '',
+          fileName: pendingScan?.name || 'scan.jpg',
+          mediaType: 'photo',
+          analysis: analysisData,
+          locationData,
       }
     : null;
   const previewCard = draft ? buildPublicationCardFromDraft(draft, authSession) : null;
