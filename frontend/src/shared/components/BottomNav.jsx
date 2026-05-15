@@ -194,9 +194,11 @@ function BottomNav() {
             )}
           </button>
         </div>
-        <div className="absolute left-1/2 top-[-92px] -translate-x-1/2 rounded-full bg-black/85 px-3 py-1 text-[10px] font-semibold text-white shadow-[0_8px_20px_rgba(0,0,0,0.2)]">
-          {audioMessage || `${audioLabel}${audioBlob ? ` · ${audioDurationLabel}` : ''}`}
-        </div>
+        {(isRecording || audioMessage) ? (
+          <div className="absolute left-1/2 top-[-92px] -translate-x-1/2 rounded-full bg-black/85 px-3 py-1 text-[10px] font-semibold text-white shadow-[0_8px_20px_rgba(0,0,0,0.2)]">
+            {audioMessage || (isRecording ? `${audioLabel}` : `${audioLabel}${audioBlob ? ` · ${audioDurationLabel}` : ''}`)}
+          </div>
+        ) : null}
         <input
           ref={fileInputRef}
           type="file"

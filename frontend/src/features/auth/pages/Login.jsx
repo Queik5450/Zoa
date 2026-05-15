@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Header from '../../../shared/components/Header';
+import { ArrowLeft } from 'lucide-react';
 import { hydrateMockAuthFromSession } from '../../../shared/lib/auth';
 import { supabase, isSupabaseConfigured } from '../../../shared/lib/supabaseClient';
 import { getPendingPublicationDraft, publishPendingPublicationDraft, savePendingPublicationDraft } from '../../../shared/lib/publicationDraft';
@@ -98,6 +99,12 @@ function Login() {
 
       <div className="mx-auto flex w-full max-w-[520px] flex-1 flex-col items-center px-5 pb-10 pt-6 sm:px-[40px] sm:pb-12 sm:pt-8">
           <div className="self-stretch flex flex-col items-center justify-center text-center">
+            <div className="self-start mb-3">
+              <button type="button" onClick={() => navigate(-1)} className="inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-1 text-sm font-medium text-black shadow-sm">
+                <ArrowLeft className="h-4 w-4" />
+                Atrás
+              </button>
+            </div>
             <h1 className="text-[clamp(2rem,5.5vw,2.9rem)] font-semibold text-black">Iniciar Sesión</h1>
             <p className="mt-3 text-[15px] text-black">
               ¿No tienes cuenta?{' '}

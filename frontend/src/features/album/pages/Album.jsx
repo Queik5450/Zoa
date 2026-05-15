@@ -170,7 +170,7 @@ function Album() {
 
       <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain px-1.5 pb-[calc(var(--zoa-bottom-height)+52px)] pt-4">
         {isLoading ? <p className="px-2 text-sm text-neutral-600">Cargando...</p> : null}
-        {!isLoading && hasError ? <p className="px-2 text-sm font-semibold text-red-600">Error: Datos no encontrados</p> : null}
+        {!isLoading && hasError ? <p className="px-2 text-sm font-semibold text-black">No se ha subido nada aún</p> : null}
         {!isLoading && !hasError && !filtered.length ? <p className="px-2 text-sm text-neutral-600">Sin resultados</p> : null}
         <div className="grid gap-[9px] [grid-template-columns:repeat(auto-fit,minmax(140px,1fr))] md:[grid-template-columns:repeat(auto-fit,minmax(160px,1fr))]">
           {filtered.map((item) => (

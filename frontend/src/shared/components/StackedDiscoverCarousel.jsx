@@ -271,26 +271,30 @@ export default function StackedDiscoverCarousel({ cards, isScanning, showControl
           {null}
         </div>
 
-        <div className="mt-4 flex justify-center gap-1.5 overflow-hidden">
-          {cards.map((card, idx) => (
-            <button
-              key={card.id}
-              type="button"
-              aria-label={`Ir a tarjeta ${idx + 1}`}
-              onClick={() => goTo(idx)}
-              className={[
-                'transition-all duration-300',
-                idx === activeIndex
-                  ? 'h-2.5 w-8 rounded-full bg-[#c1e14f] shadow-[0_0_0_3px_rgba(193,225,79,0.18)]'
-                  : 'h-2.5 w-2.5 rounded-full bg-[#ced7bb] hover:bg-[#b8c693]',
-              ].join(' ')}
-            />
-          ))}
-        </div>
+        {showControls ? (
+          <>
+            <div className="mt-4 flex justify-center gap-1.5 overflow-hidden">
+              {cards.map((card, idx) => (
+                <button
+                  key={card.id}
+                  type="button"
+                  aria-label={`Ir a tarjeta ${idx + 1}`}
+                  onClick={() => goTo(idx)}
+                  className={[
+                    'transition-all duration-300',
+                    idx === activeIndex
+                      ? 'h-2.5 w-8 rounded-full bg-[#c1e14f] shadow-[0_0_0_3px_rgba(193,225,79,0.18)]'
+                      : 'h-2.5 w-2.5 rounded-full bg-[#ced7bb] hover:bg-[#b8c693]',
+                  ].join(' ')}
+                />
+              ))}
+            </div>
 
-        <p className="mt-2 text-center text-[10px] font-medium text-neutral-500 sm:text-[11px]">
-          Toca o haz clic sobre la carta activa para voltearla.
-        </p>
+            <p className="mt-2 text-center text-[10px] font-medium text-neutral-500 sm:text-[11px]">
+              Toca o haz clic sobre la carta activa para voltearla.
+            </p>
+          </>
+        ) : null}
       </div>
     </section>
   );

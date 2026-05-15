@@ -30,14 +30,14 @@ function Home() {
   }, []);
 
   return (
-    <div className="relative isolate flex min-h-0 flex-1 flex-col overflow-hidden bg-[linear-gradient(180deg,#f7fbef_0%,#eef6df_28%,#f8faf7_100%)] px-3 pb-3 pt-2 sm:px-4 sm:pb-4 sm:pt-3">
+    <div className="relative isolate flex min-h-[100dvh] flex-1 flex-col overflow-hidden bg-[linear-gradient(180deg,#f7fbef_0%,#eef6df_28%,#f8faf7_100%)] px-3 pb-3 pt-0 sm:px-4 sm:pb-4 sm:pt-0">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-[radial-gradient(circle_at_top_left,rgba(193,225,79,0.18),transparent_62%),radial-gradient(circle_at_top_right,rgba(128,144,46,0.12),transparent_58%)]" />
 
       <section className="relative z-30 mt-0 shrink-0 pb-3 sm:mt-1 sm:pb-10 lg:pb-12">
         <h2 className="text-center text-[clamp(1.6rem,5vw,2.2rem)] font-black text-[#1f2208]">Descubre</h2>
       </section>
 
-      <section className="relative z-10 mt-0 flex min-h-0 flex-[1.05] items-start justify-center pt-0 sm:pt-8 lg:pt-14">
+      <section className="relative z-10 -mt-2 flex min-h-0 flex-1 items-start justify-center pt-0 sm:pt-2 lg:pt-4">
         <StackedDiscoverCarousel cards={cards} isScanning={isScanning} showControls={false} />
       </section>
     </div>
