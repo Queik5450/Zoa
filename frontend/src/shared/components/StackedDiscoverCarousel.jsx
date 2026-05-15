@@ -217,7 +217,8 @@ export default function StackedDiscoverCarousel({ cards, isScanning, showControl
             className="absolute inset-0 overflow-visible"
             style={{
               transform: `translateX(${dragOffset}px)`,
-              transition: gestureRef.current.dragging ? 'none' : 'transform 240ms cubic-bezier(0.22, 1, 0.36, 1)',
+              transition: gestureRef.current.dragging ? 'none' : 'transform 520ms cubic-bezier(0.22,0.8,0.18,1)',
+              willChange: 'transform',
             }}
           >
             {visibleCards.map(({ card, offset, index }) => {
@@ -233,8 +234,11 @@ export default function StackedDiscoverCarousel({ cards, isScanning, showControl
                 transform: `translate(-50%, -50%) translateX(${translateX}) translateY(${translateY}) rotate(${rotate})`,
                 opacity,
                 zIndex,
-                transition: gestureRef.current.dragging ? 'none' : 'transform 320ms ease, opacity 320ms ease',
+                transition: gestureRef.current.dragging
+                  ? 'none'
+                  : 'transform 520ms cubic-bezier(0.22,0.8,0.18,1), opacity 420ms cubic-bezier(0.22,0.8,0.18,1), filter 420ms cubic-bezier(0.22,0.8,0.18,1)',
                 filter: offset === 0 ? 'none' : 'saturate(0.98) brightness(0.99)',
+                willChange: 'transform, opacity',
                 left: '50%',
                 top: 'var(--stack-top)',
                 transformOrigin: 'center center',
